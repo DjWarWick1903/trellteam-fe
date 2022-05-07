@@ -2,23 +2,39 @@
 <html lang="en">
     <head>
         <title>TrellTeam - Login</title>
-        <module href="/components/head.html"></module>
-        
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <link rel="stylesheet" href="../../node_modules/bootstrap/dist/css/bootstrap.css">
+        <script src="../js/bundles/LoginBundle.js"></script>
     </head>
 
     <body>
-        <h1>Trell Team</h1>
-
-        <form onsubmit="return login(this)">
-            <label for="username">Username:</label>
-            <input type="text" name="username">
-
-            <label for="password">Password:</label>
-            <input type="password" name="password">
-
-            <input type="submit" name="submit" value="Login">
-        </form>
+        <div class="container">
+            <h1>Trell Team</h1>
 
 
+                <label for="username">Username:</label>
+                <input type="text" name="username" id="username">
+
+                <label for="password">Password:</label>
+                <input type="password" name="password" id="password">
+
+                <input type="button" name="submit" value="Login" id="Login">
+
+
+            <label name="result" id="result"></label>
+        </div>
+
+        <script>
+            document.getElementById("Login").addEventListener('click', function () {
+                console.log('Logging in...');
+                const username = document.getElementById('username').value;
+                console.log(username);
+                const password = document.getElementById('password').value;
+                console.log(password);
+                window.loginModule.login(username, password);
+            });
+        </script>
+        <script src="../../node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>
     </body>
 </html>

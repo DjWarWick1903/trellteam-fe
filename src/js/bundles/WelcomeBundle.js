@@ -17,4 +17,4 @@ const welcome = require('./modules/Welcome.js');
 
 global.window.welcome = welcome;
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./components/Welcome.js":1}]},{},[2]);
+},{"./modules/Welcome.js":1}]},{},[2]);
