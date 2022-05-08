@@ -1,70 +1,43 @@
 const axios = require("axios");
-const qs = require('qs');
 
-//axios.defaults.headers.common['Access-Control-Allow-Origin'] = '*';
-
-function login(user, pass) {
-    //const username = document.getElementById('username');
-    //const password = document.getElementById('password');
-    const isValid = false;
+async function requestLogin(user, pass) {
     const data = {
         username: user,
         password: pass
     };
     const url = 'http://localhost:8080/security/login';
-    //const url = 'http://localhost:8080/security/account/all';
-    const options = {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded'},
-            //'Access-Control-Allow-Origin': '*'},
-        data: qs.stringify(data),
-        url
-    };
-//onsubmit="return login(this)"
+    let response;
 
-    axios
-        .get('http://localhost:8080/security/account/all', data, {
+    /*axios
+        .get('http://localhost:8080/security/account/all', {
             headers: {
-                'Authorization': 'Token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJyb2JlcnRwb3AiLCJyb2xlcyI6WyJBRE1JTiJdLCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwODAvc2VjdXJpdHkvbG9naW4iLCJleHAiOjE2NTE5NDg3MjB9.mMNmsWjH2EDy7lYVqPFQFR_8AF4xFBPBpkP-MVKtuDI'
+                'Authorization': 'Token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJyb2JlcnRwb3AiLCJyb2xlcyI6WyJBRE1JTiJdLCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwODAvc2VjdXJpdHkvbG9naW4iLCJleHAiOjE2NTE5NTMwNzN9.iWbGz8INP-CSKzI5_R_s76ghq5VRNZG6MACeC-I_RPU'
             }
         }).then(function (resp) {
         console.log(resp);
     }).catch(function (err) {
         console.log(err);
-    });
-
-    /*axios
-        .get('http://localhost:8080/security/login/test', new URLSearchParams({
-            username: user,
-            password: pass
-        }), {
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                }
-            }).then(function (resp) {
-        console.log(resp);
-    }).catch(function (err) {
-        console.log(err);
     });*/
 
-    /*axios
-        .get('http://localhost:8080/security/login',
-            qs.stringify({
-                username: user,
-                password: pass
-            }), {
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                }
-            }).then(function (resp) {
-                console.log(resp);
-        }).catch(function (err) {
-            console.log(err);
-    });*/
-    /*axios(options)
-        .then(res => {console.log(res); isValid = true;})
-        .catch(err => console.log(err));*/
-    return isValid;
+
+    await axios
+        .post(url, data)
+        .then(function (resp) {
+            response = {
+                status: resp.status,
+                accessToken: resp.data.access_token,
+                refreshToken: resp.data.refresh_token
+            }
+            axios.defaults.headers.common['Authorization'] = `Token: ${response.accessToken}`;
+        })
+        .catch(function (err) {
+            response = {
+                status: err.response.status,
+                message: err.message
+            }
+        });
+
+    return response;
 }
 
-module.exports.login = login;
+module.exports.requestLogin = requestLogin;

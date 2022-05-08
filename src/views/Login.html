@@ -12,27 +12,44 @@
         <div class="container">
             <h1>Trell Team</h1>
 
-
+            <p name="error" style="color: red"></p>
+            <form id="LoginForm">
                 <label for="username">Username:</label>
-                <input type="text" name="username" id="username">
+                <input type="text" id="username" placeholder="Username">
 
                 <label for="password">Password:</label>
-                <input type="password" name="password" id="password">
+                <input type="password" id="password" placeholder="Password">
 
-                <input type="button" name="submit" value="Login" id="Login">
+                <input type="button" value="Login" id="Login">
+            </form>
 
-
-            <label name="result" id="result"></label>
+            <form id="ReturnForm" action="Welcome.html" method="post">
+                <input type="submit" value="Return" id="Return">
+            </form>
         </div>
 
         <script>
-            document.getElementById("Login").addEventListener('click', function () {
-                console.log('Logging in...');
+            document.getElementById("Login").addEventListener('click', async function (e) {
+                const login = window.executeLogin;
+                const verifyCredentials = window.verifyCredentials;
+
                 const username = document.getElementById('username').value;
-                console.log(username);
                 const password = document.getElementById('password').value;
-                console.log(password);
-                window.loginModule.login(username, password);
+
+                const form = document.getElementById("LoginForm");
+                const errorLine = document.getElementsByName("error")[0];
+
+                const isLoggedIn = verifyCredentials(username, password, errorLine) ? await login(username, password) : 1;
+
+                if(isLoggedIn != 200) {
+                    e.preventDefault();
+                    if(isLoggedIn == 403) errorLine.innerText = "There was an error logging in. Please try again.";
+                } else {
+                    e.preventDefault();
+                    form.action = 'MainPage.html';
+                    form.method = 'post';
+                    form.submit();
+                }
             });
         </script>
         <script src="../../node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>
