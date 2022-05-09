@@ -12,19 +12,19 @@
         <div class="container">
             <h1>Trell Team</h1>
 
+            <div id="errorAlertPlaceholder"></div>
             <p name="error" style="color: red"></p>
             <form id="LoginForm">
                 <label for="username">Username:</label>
                 <input type="text" id="username" placeholder="Username">
 
+                <br><br>
                 <label for="password">Password:</label>
                 <input type="password" id="password" placeholder="Password">
 
-                <input type="button" value="Login" id="Login">
-            </form>
-
-            <form id="ReturnForm" action="Welcome.html" method="post">
-                <input type="submit" value="Return" id="Return">
+                <br><br>
+                <input class="btn btn-secondary" type="button" value="Return" id="Return">
+                <input class="btn btn-primary" type="button" value="Login" id="Login">
             </form>
         </div>
 
@@ -43,13 +43,20 @@
 
                 if(isLoggedIn != 200) {
                     e.preventDefault();
-                    if(isLoggedIn == 403) errorLine.innerText = "There was an error logging in. Please try again.";
+                    //if(isLoggedIn == 403) errorLine.innerText = "There was an error logging in. Please try again.";
                 } else {
                     e.preventDefault();
                     form.action = 'MainPage.html';
                     form.method = 'post';
                     form.submit();
                 }
+            });
+            document.getElementById("Return").addEventListener('click', function (e) {
+                const form = document.getElementById("LoginForm");
+                e.preventDefault();
+                form.action = 'Welcome.html';
+                form.method = 'post';
+                form.submit();
             });
         </script>
         <script src="../../node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>
