@@ -4,31 +4,46 @@
         <title>TrellTeam - Login</title>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1"/>
-        <link rel="stylesheet" href="../../node_modules/bootstrap/dist/css/bootstrap.css">
-        <script src="../js/bundles/LoginBundle.js"></script>
+        <link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.css">
+        <link rel="stylesheet" href="/src/css/Login.css">
+        <script src="/src/js/bundles/LoginBundle.js"></script>
     </head>
 
     <body>
-        <div class="container">
-            <h1>Trell Team</h1>
+        <div class="container mx-auto">
+            <h1 class="display-1"><strong>Trell Team</strong></h1>
+            <hr>
+            <div class="announcer justify-content-center d-flex" id="errorAlertPlaceholder"></div><br>
 
-            <div id="errorAlertPlaceholder"></div>
-            <p name="error" style="color: red"></p>
             <form id="LoginForm">
-                <label for="username">Username:</label>
-                <input type="text" id="username" placeholder="Username">
 
-                <br><br>
-                <label for="password">Password:</label>
-                <input type="password" id="password" placeholder="Password">
+                <div class="row">
+                    <div class="col-12 justify-content-center d-flex">
+                        <div class="card">
+                            <div class="card-header text-white">Login</div>
+                            <div class="card-body">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text text-white span" id="basic-addon3">Username</span>
+                                    <input type="text" class="form-control" id="username" aria-describedby="basic-addon3" placeholder="Input username">
+                                </div>
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text text-white span" id="basic-addon3">Password</span>
+                                    <input type="password" class="form-control" id="password" aria-describedby="basic-addon3" placeholder="Input password">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div><br>
 
-                <br><br>
-                <input class="btn btn-secondary" type="button" value="Return" id="Return">
-                <input class="btn btn-primary" type="button" value="Login" id="Login">
+                <div class="col-2 mx-auto">
+                    <input class="btn btn-secondary btn-lg" type="button" value="Return" id="Return">
+                    <input class="btn btn-primary btn-lg" type="button" value="Login" id="Login">
+                </div>
             </form>
         </div>
 
         <script>
+            window.isRegistered();
             document.getElementById("Login").addEventListener('click', async function (e) {
                 const login = window.executeLogin;
                 const verifyCredentials = window.verifyCredentials;
@@ -37,13 +52,11 @@
                 const password = document.getElementById('password').value;
 
                 const form = document.getElementById("LoginForm");
-                const errorLine = document.getElementsByName("error")[0];
 
-                const isLoggedIn = verifyCredentials(username, password, errorLine) ? await login(username, password) : 1;
+                const isLoggedIn = verifyCredentials(username, password) ? await login(username, password) : 1;
 
                 if(isLoggedIn != 200) {
                     e.preventDefault();
-                    //if(isLoggedIn == 403) errorLine.innerText = "There was an error logging in. Please try again.";
                 } else {
                     e.preventDefault();
                     form.action = 'MainPage.html';
@@ -59,6 +72,6 @@
                 form.submit();
             });
         </script>
-        <script src="../../node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>
+        <script src="/node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>
     </body>
 </html>

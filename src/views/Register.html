@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>TrellTeam - Register</title>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.css">
+        <link rel="stylesheet" href="/src/css/Register.css">
+        <script src="/src/js/bundles/RegisterBundle.js"></script>
+    </head>
+
+    <body>
+        <div class="container">
+            <h1 class="display-1"><strong>Trell Team</strong></h1>
+            <hr>
+
+            <div class="announcer justify-content-center d-flex" id="errorAlertPlaceholder"></div><br>
+
+            <br>
+            <form id="registerForm">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="card">
+                            <div class="card-header text-white">Organisation details</div>
+                            <div class="card-body">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text text-white span" id="NameAddon">Name</span>
+                                    <input type="text" class="form-control" id="OrgName" aria-describedby="NameAddon" placeholder="Input name">
+                                </div>
+
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text text-white span" id="SignAddon">Sign</span>
+                                    <input type="text" class="form-control" id="sign" aria-describedby="SignAddon" placeholder="Input sign">
+                                </div>
+
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text text-white span" id="CUIAddon">CUI</span>
+                                    <input type="text" class="form-control" id="cui" aria-describedby="CUIAddon" placeholder="Input CUI">
+                                </div>
+
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text text-white span" id="DomainAddon">Domain</span>
+                                    <input type="text" class="form-control" id="Domain" aria-describedby="DomainAddon" placeholder="Input domain">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card">
+                            <div class="card-header text-white">Department</div>
+                            <div class="card-body">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text text-white span" id="NameAddon">Name</span>
+                                    <input type="text" class="form-control" id="DepName" aria-describedby="NameAddon" placeholder="Input name">
+                                </div>
+                                <p class="lead">
+                                    <strong>Please specify the main department, on which you belong.</strong>
+                                </p>
+                                <p class="lead">
+                                    <strong>Don't worry, you will be able to add more departments later on! &#128512;</strong>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <div class="row">
+                    <div class="col-6">
+                        <div class="card">
+                            <div class="card-header text-white">Employee details</div>
+                            <div class="card-body">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text text-white span" id="FNAddon">First name</span>
+                                    <input type="text" class="form-control" id="FirstName" aria-describedby="FNAddon" placeholder="Input first name">
+                                </div>
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text text-white span" id="LNAddon">Last name</span>
+                                    <input type="text" class="form-control" id="LastName" aria-describedby="LNAddon" placeholder="Input last name">
+                                </div>
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text text-white span" id="PhoneAddon">Phone</span>
+                                    <input type="text" class="form-control" id="Phone" aria-describedby="PhoneAddon" placeholder="Input phone number">
+                                </div>
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text text-white span" id="CNPAddon">CNP</span>
+                                    <input type="text" class="form-control" id="cnp" aria-describedby="CNPAddon" placeholder="Input CNP">
+                                </div>
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text text-white span" id="BDayAddon">Birthday</span>
+                                    <input type="date" class="form-control" id="bday" aria-describedby="BDayAddon" placeholder="Input birthday">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card">
+                            <div class="card-header text-white">Account</div>
+                            <div class="card-body">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text text-white span" id="NameAddon">Email</span>
+                                    <input type="text" id="email" class="form-control" placeholder="Input email" aria-label="Username">
+                                    <span class="input-group-text">@</span>
+                                    <input type="text" id="EmailDomain" class="form-control" placeholder="Domain" aria-label="Domain" disabled>
+                                </div>
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text text-white span" id="NameAddon">Username</span>
+                                    <input type="text" class="form-control" id="username" aria-describedby="NameAddon" placeholder="Input username">
+                                </div>
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text text-white span" id="NameAddon">Password</span>
+                                    <input type="password" class="form-control" id="password" aria-describedby="NameAddon" placeholder="Input password">
+                                </div>
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text text-white span" id="NameAddon">Confirm</span>
+                                    <input type="password" class="form-control" id="confirm" aria-describedby="NameAddon" placeholder="Confirm password">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <br>
+
+                <div class="col-2 mx-auto">
+                    <input class="btn btn-secondary btn-lg" type="button" value="Return" id="Return">
+                    <input class="btn btn-primary btn-lg" type="button" value="Register" id="Register">
+                </div>
+
+            </form>
+        </div>
+
+        <script>
+            document.getElementById('Domain').addEventListener('change', function (e) {
+                const domain = document.getElementById('Domain').value;
+                document.getElementById('EmailDomain').value = domain;
+            });
+
+            document.getElementById('Register').addEventListener('click', async function (e) {
+                e.preventDefault();
+                const form = document.getElementById('registerForm');
+
+                const verification = window.verifyData();
+                if(verification != false) {
+                    const resp = await window.executeRegister(verification);
+
+                    if(resp.status == 201) {
+                        form.action = 'Login.html?registered=1';
+                        form.method = 'post';
+                        form.submit();
+                    }
+                }
+            });
+
+            document.getElementById('Return').addEventListener('click', function (e) {
+                e.preventDefault();
+                const form = document.getElementById("registerForm");
+
+                form.action = 'Welcome.html';
+                form.method = 'post';
+                form.submit();
+            });
+        </script>
+        <script src="/node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>
+    </body>
+</html>

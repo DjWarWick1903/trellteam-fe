@@ -4,26 +4,33 @@
         <title>TrellTeam</title>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1"/>
-        <link rel="stylesheet" href="../../node_modules/bootstrap/dist/css/bootstrap.css">
-        <script src="../js/bundles/WelcomeBundle.js"></script>
+        <link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.css">
+        <link rel="stylesheet" href="/src/css/Welcome.css">
+        <script src="/src/js/bundles/WelcomeBundle.js"></script>
     </head>
 
     <body>
         <div class="container">
-            <h1>TrellTeam</h1>
+            <h1 class="display-1"><strong>Trell Team</strong></h1>
+            <hr>
 
-            <h2>Welcome to the best team management application!</h2>
+            <h2 class="display-2">Welcome to the best team management application!</h2><br>
 
             <form name="choice_form">
-                <input type="submit" name="Register" id="Register" value="Register">
-                <input type="submit" name="Login" id="Login" value="Login">
+                <div class="col-2 mx-auto">
+                    <input class="btn btn-primary btn-lg" type="button" value="Register" id="Register">
+                    <input class="btn btn-primary btn-lg" type="button" value="Login" id="Login">
+                </div>
             </form>
         </div>
         
         <script>
-            let welcome = window.welcome;
-            document.getElementById("Login").addEventListener('click', welcome.toLogin);
+            const toLogin = window.toLogin;
+            document.getElementById("Login").addEventListener('click', toLogin);
+
+            const toRegister = window.toRegister;
+            document.getElementById("Register").addEventListener('click', toRegister);
         </script>
-        <script src="../../node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>
+        <script src="/node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>
     </body>
 </html>

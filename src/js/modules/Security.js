@@ -1,5 +1,26 @@
 const axios = require("axios");
 
+async function requestRegister(registerData) {
+    const url = 'http://localhost:8080/security/organisation/register';
+    let response;
+
+    await axios
+        .post(url, registerData)
+        .then(function (resp) {
+            response = {
+                status: resp.status
+            }
+        })
+        .catch(function (err) {
+            response = {
+                status: err.response.status,
+                message: err.message
+            }
+        });
+
+    return response;
+}
+
 async function requestLogin(user, pass) {
     const data = {
         username: user,
@@ -41,3 +62,4 @@ async function requestLogin(user, pass) {
 }
 
 module.exports.requestLogin = requestLogin;
+module.exports.requestRegister = requestRegister;

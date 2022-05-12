@@ -1,20 +1,38 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+(function (global){(function (){
+// Javascript script which will be bundled and used inside the Welcome.html page.
+
+const helperModule = require("./modules/Helper");
+
 function toLogin() {
     document.choice_form.action = "Login.html";
-    return true;
+    document.choice_form.method = "post";
+    document.choice_form.submit();
 }
 
 function toRegister() {
-    document.choice_form.action = "Login.html";
-    return true;
+    document.choice_form.action = "Register.html";
+    document.choice_form.method = "post";
+    document.choice_form.submit();
 }
 
-module.exports.toLogin = toLogin;
-module.exports.toRegister = toRegister;
-},{}],2:[function(require,module,exports){
-(function (global){(function (){
-const welcome = require('./modules/Welcome.js');
 
-global.window.welcome = welcome;
+global.window.toLogin = toLogin;
+global.window.toRegister = toRegister;
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./modules/Welcome.js":1}]},{},[2]);
+},{"./modules/Helper":2}],2:[function(require,module,exports){
+function showAlert(message, type, alertPlaceholder) {
+    alertPlaceholder.innerHTML = '<div class="alert alert-' + type + ' alert-dismissible" role="alert">' + message + '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>';
+}
+
+function verifyInputIsEmpty(input) {
+    if(input == null || input == '') {
+        return true;
+    }
+
+    return false;
+}
+
+module.exports.showAlert = showAlert;
+module.exports.verifyInputIsEmpty = verifyInputIsEmpty;
+},{}]},{},[1]);

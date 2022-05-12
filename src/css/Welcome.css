@@ -1,0 +1,22 @@
+.lead {
+    text-align: center;
+}
+
+.display-1 {
+    color: #0d6efd;
+    text-align: center;
+}
+
+.display-2 {
+    color: #0d6efd;
+    text-align: center;
+}
+
+hr {
+    border: 10px solid;
+    border-radius: 5px;
+    color: #0d6efd
+}
+.btn-primary {
+    width: 100px;
+}
