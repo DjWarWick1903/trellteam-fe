@@ -4388,65 +4388,48 @@ module.exports = {
 (function (global){(function (){
 const userModule = require('./modules/User.js');
 
-async function getMainPageDetails(username, tokens) {
-    let response;
-    if(username != null && tokens.accessToken != null && tokens.refreshToken != null) {
-        response = await userModule.getMainPageDetails(username, tokens);
-    } else {
-        global.window.location.replace("Login.html");
-    }
-
+async function getOrganisationDetails(username, tokens) {
+    const response = await userModule.getMainPageDetails(username, tokens);
 
     if(response.status == 200) {
-        let depsCard = '';
+        const organisation = response.organisation;
         const departments = response.departments;
-        let number = 0;
+
+        const foundationDateSystem = new Date(Date.parse(organisation.dateCreated));
+        const foundationDateString = `${foundationDateSystem.getDate()}-${foundationDateSystem.getMonth()}-${foundationDateSystem.getFullYear()}`;
+
+        const orgDetails = `
+            <p class="lead">Name: ${organisation.name}</p>
+            <p class="lead">Sign: ${organisation.sign}</p>
+            <p class="lead">Foundation date: ${foundationDateString}</p>
+            <p class="lead">Domain: xxxx@${organisation.domain}</p>
+            <p class="lead">CUI: ${organisation.cui}</p>
+            <p class="lead">Departments: </p>
+        `;
+
+        let depDetails = '';
         for(const department of departments) {
-            const depCard = `
-                <div class="col-6">
-                    <div class="card">
-                        <div class="card-header text-white">${department.name}</div>
-                        <div class="card-body">
-                            <form action="DepartmentEmployees.html" method="get" class="container-fluid justify-content-center">
-                                <input type="hidden" name="department" value="${department.name}">
-                                <div class="mx-auto col-4">
-                                    <input class="btn btn-primary btn-lg" type="submit" value="Employees">
-                                </div>
-                            </form><br>
-                            <form action="Board.html" method="get" class="container-fluid justify-content-center">
-                                <input type="hidden" name="department" value="${department.name}">
-                                <div class="col-4 mx-auto">
-                                    <input class="btn btn-primary btn-lg" type="submit" value="Boards">
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            `;
-            depsCard = depsCard.concat(depCard);
-            number += 1;
-            if(number == 2) {
-                number = 0;
-            }
+            const employees = department.employees.length;
+            const name = department.name;
+            depDetails = depDetails.concat(`<p class="lead">${name} - ${employees} employees`);
         }
 
         const orgCard = `
-        <div class="col-12">
             <div class="card">
-                <div class="card-header text-white">${response.organisation.name}</div>
+                <div class="card-header text-white">${organisation.name}</div>
                 <div class="card-body">
-                    ${depsCard}
+                    ${orgDetails}
+                    ${depDetails}
                 </div>
             </div>
-        </div>
         `;
 
-        const replacement = document.getElementById('boards');
-        replacement.innerHTML = orgCard;
+        const placeholder = document.getElementById('organisation');
+        placeholder.innerHTML = orgCard;
     }
 }
 
-global.window.getMainPageDetails = getMainPageDetails;
+global.window.getOrganisationDetails = getOrganisationDetails;
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./modules/User.js":39}],38:[function(require,module,exports){
 const axios = require("axios");

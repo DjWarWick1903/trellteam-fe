@@ -1,0 +1,29 @@
+.span {
+    width: 20%;
+    background-color: #0d6efd;
+    text-align: center;
+}
+
+.card-header {
+    background-color: #0d6efd;
+    text-align: center;
+}
+
+.card {
+    width: 50%;
+}
+
+.display-1 {
+    color: #0d6efd;
+    text-align: center;
+}
+
+hr {
+    border: 10px solid;
+    border-radius: 5px;
+    color: #0d6efd
+}
+
+.btn-primary, .btn-secondary {
+    width: 130px;
+}

@@ -130,6 +130,8 @@
         </div>
 
         <script>
+            window.sessionStorage.clear();
+
             document.getElementById('Domain').addEventListener('change', function (e) {
                 const domain = document.getElementById('Domain').value;
                 document.getElementById('EmailDomain').value = domain;

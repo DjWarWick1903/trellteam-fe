@@ -1,7 +1,13 @@
 const userModule = require('./modules/User.js');
 
 async function getMainPageDetails(username, tokens) {
-    let response = await userModule.getMainPageDetails(username, tokens);
+    let response;
+    if(username != null && tokens.accessToken != null && tokens.refreshToken != null) {
+        response = await userModule.getMainPageDetails(username, tokens);
+    } else {
+        global.window.location.replace("Login.html");
+    }
+
 
     if(response.status == 200) {
         let depsCard = '';

@@ -43,6 +43,8 @@
         </div>
 
         <script>
+            window.sessionStorage.clear();
+
             window.isRegistered();
             document.getElementById("Login").addEventListener('click', async function (e) {
                 const login = window.executeLogin;
