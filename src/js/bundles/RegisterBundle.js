@@ -4490,7 +4490,6 @@ function verifyData() {
         helperModule.showAlert('Please specify the name of the department.', 'danger', alertPlaceholder);
         return false;
     }
-    console.log(depName);
 
     // Employee
     const firstName = document.getElementById('FirstName').value;
@@ -4502,13 +4501,14 @@ function verifyData() {
     if(!verifyEmployeeDetails(firstName, lastName, phone, cnp, bday, alertPlaceholder)) return false;
 
     // Account
-    const email = document.getElementById('email').value;
+    let email = document.getElementById('email').value;
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
     const confirm = document.getElementById('confirm').value;
 
     if(!verifyAccountDetails(email, username, password, confirm, alertPlaceholder)) return false;
 
+    email.concat('@', domain);
     const employee = {
         firstName,
         lastName,
@@ -4516,7 +4516,6 @@ function verifyData() {
         cnp,
         bday
     };
-    console.log(employee);
 
     const organisation = {
         name,
@@ -4524,14 +4523,12 @@ function verifyData() {
         cui,
         domain
     };
-    console.log(organisation);
 
     const account = {
         email,
         username,
         password
     };
-    console.log(account);
 
     return {
         organisation,
@@ -4543,10 +4540,8 @@ function verifyData() {
 
 async function executeRegister(registerData) {
     console.log('Registering data...');
-    console.log(registerData);
 
     const response = await securityModule.requestRegister(registerData);
-    console.log(response);
 
     if(response.status != 201) {
         const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
@@ -4591,7 +4586,8 @@ async function requestRegister(registerData) {
         .catch(function (err) {
             response = {
                 status: err.response.status,
-                message: err.message
+                message: err.message,
+                serverMessage: err.response.data.error_message
             }
         });
 
@@ -4606,18 +4602,6 @@ async function requestLogin(user, pass) {
     const url = 'http://localhost:8080/security/login';
     let response;
 
-    /*axios
-        .get('http://localhost:8080/security/account/all', {
-            headers: {
-                'Authorization': 'Token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJyb2JlcnRwb3AiLCJyb2xlcyI6WyJBRE1JTiJdLCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwODAvc2VjdXJpdHkvbG9naW4iLCJleHAiOjE2NTE5NTMwNzN9.iWbGz8INP-CSKzI5_R_s76ghq5VRNZG6MACeC-I_RPU'
-            }
-        }).then(function (resp) {
-        console.log(resp);
-    }).catch(function (err) {
-        console.log(err);
-    });*/
-
-
     await axios
         .post(url, data)
         .then(function (resp) {
@@ -4626,18 +4610,89 @@ async function requestLogin(user, pass) {
                 accessToken: resp.data.access_token,
                 refreshToken: resp.data.refresh_token
             }
-            axios.defaults.headers.common['Authorization'] = `Token: ${response.accessToken}`;
+            //axios.defaults.headers.common['Authorization'] = `Token: ${response.accessToken}`;
         })
         .catch(function (err) {
             response = {
                 status: err.response.status,
-                message: err.message
+                message: err.message,
+                serverMessage: err.response.data.error_message
             }
         });
 
     return response;
 }
 
+async function requestTokenRefresh(refreshToken) {
+    const url = 'http://localhost:8080/security/token/refresh';
+    const config = {
+        headers: {
+            'Authorization': `Token: ${refreshToken}`
+        }
+    }
+    let response;
+
+    await axios
+        .get(url, config)
+        .then(function (resp) {
+            console.log(resp);
+            response = {
+                status: resp.status,
+                accessToken: resp.data.access_token,
+                refreshToken: resp.data.refresh_token
+            }
+        })
+        .catch(function (err) {
+            console.log(err);
+            response = {
+                status: err.response.status,
+                message: err.message,
+                serverMessage: err.response.data.error_message
+            }
+        });
+
+    return response;
+}
+
+async function ping(tokens) {
+    const url = 'http://localhost:8080/security/ping';
+    const config = {
+        headers: {
+            'Authorization': `Token: ${tokens.accessToken}`
+        }
+    }
+    let response;
+
+    await axios
+        .get(url, config)
+        .then(function (resp) {
+            console.log(resp);
+            response = tokens;
+        })
+        .catch(function (err) {
+            console.log(err);
+            if(err.response.data.error_message.includes('The Token has expired')) {
+                response = null;
+            }
+        });
+
+    if(response == null) {
+        response = requestTokenRefresh(token.refreshToken);
+        if(response.status != 200) {
+            response = null;
+        } else {
+            response = {
+                accessToken: response.accessToken,
+                refreshToken: response.refreshToken
+            }
+        }
+    }
+
+    return response;
+}
+
 module.exports.requestLogin = requestLogin;
 module.exports.requestRegister = requestRegister;
+module.exports.requestTokenRefresh = requestTokenRefresh;
+module.exports.ping = ping;
 },{"axios":5}]},{},[37]);

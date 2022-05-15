@@ -14,7 +14,8 @@ async function requestRegister(registerData) {
         .catch(function (err) {
             response = {
                 status: err.response.status,
-                message: err.message
+                message: err.message,
+                serverMessage: err.response.data.error_message
             }
         });
 
@@ -29,18 +30,6 @@ async function requestLogin(user, pass) {
     const url = 'http://localhost:8080/security/login';
     let response;
 
-    /*axios
-        .get('http://localhost:8080/security/account/all', {
-            headers: {
-                'Authorization': 'Token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJyb2JlcnRwb3AiLCJyb2xlcyI6WyJBRE1JTiJdLCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwODAvc2VjdXJpdHkvbG9naW4iLCJleHAiOjE2NTE5NTMwNzN9.iWbGz8INP-CSKzI5_R_s76ghq5VRNZG6MACeC-I_RPU'
-            }
-        }).then(function (resp) {
-        console.log(resp);
-    }).catch(function (err) {
-        console.log(err);
-    });*/
-
-
     await axios
         .post(url, data)
         .then(function (resp) {
@@ -49,17 +38,88 @@ async function requestLogin(user, pass) {
                 accessToken: resp.data.access_token,
                 refreshToken: resp.data.refresh_token
             }
-            axios.defaults.headers.common['Authorization'] = `Token: ${response.accessToken}`;
+            //axios.defaults.headers.common['Authorization'] = `Token: ${response.accessToken}`;
         })
         .catch(function (err) {
             response = {
                 status: err.response.status,
-                message: err.message
+                message: err.message,
+                serverMessage: err.response.data.error_message
             }
         });
 
     return response;
 }
 
+async function requestTokenRefresh(refreshToken) {
+    const url = 'http://localhost:8080/security/token/refresh';
+    const config = {
+        headers: {
+            'Authorization': `Token: ${refreshToken}`
+        }
+    }
+    let response;
+
+    await axios
+        .get(url, config)
+        .then(function (resp) {
+            console.log(resp);
+            response = {
+                status: resp.status,
+                accessToken: resp.data.access_token,
+                refreshToken: resp.data.refresh_token
+            }
+        })
+        .catch(function (err) {
+            console.log(err);
+            response = {
+                status: err.response.status,
+                message: err.message,
+                serverMessage: err.response.data.error_message
+            }
+        });
+
+    return response;
+}
+
+async function ping(tokens) {
+    const url = 'http://localhost:8080/security/ping';
+    const config = {
+        headers: {
+            'Authorization': `Token: ${tokens.accessToken}`
+        }
+    }
+    let response;
+
+    await axios
+        .get(url, config)
+        .then(function (resp) {
+            console.log(resp);
+            response = tokens;
+        })
+        .catch(function (err) {
+            console.log(err);
+            if(err.response.data.error_message.includes('The Token has expired')) {
+                response = null;
+            }
+        });
+
+    if(response == null) {
+        response = requestTokenRefresh(token.refreshToken);
+        if(response.status != 200) {
+            response = null;
+        } else {
+            response = {
+                accessToken: response.accessToken,
+                refreshToken: response.refreshToken
+            }
+        }
+    }
+
+    return response;
+}
+
 module.exports.requestLogin = requestLogin;
 module.exports.requestRegister = requestRegister;
+module.exports.requestTokenRefresh = requestTokenRefresh;
+module.exports.ping = ping;

@@ -5,11 +5,46 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1"/>
         <link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.css">
-        <script src="/src/js/bundles/LoginBundle.js"></script>
+        <link rel="stylesheet" href="/src/css/MainPage.css">
+        <script src="/src/js/bundles/MainPageBundle.js"></script>
     </head>
 
     <body>
+        <div class="container">
+            <h1 class="display-1"><strong>Trell Team</strong></h1>
+            <hr>
 
+            <!-- Navbar -->
+            <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+                <div class="container-fluid">
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+                        <div class="navbar-nav">
+                            <a class="nav-link active" aria-current="page" href="MainPage.html">Home</a>
+                            <a class="nav-link" href="Organisation.html">Organisation</a>
+                            <a class="nav-link" href="NewDepartment.html">Add Department</a>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+            <div class="announcer justify-content-center d-flex" id="errorAlertPlaceholder"></div><br>
+
+            <!-- Boards -->
+            <div id="boards">
+
+            </div>
+        </div>
+
+        <script>
+            const username = window.sessionStorage.getItem('username');
+            const tokens = {
+                accessToken: window.sessionStorage.getItem('accessToken'),
+                refreshToken: window.sessionStorage.getItem('refreshToken')
+            }
+            window.getMainPageDetails(username, tokens);
+        </script>
 
         <script src="/node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>
     </body>

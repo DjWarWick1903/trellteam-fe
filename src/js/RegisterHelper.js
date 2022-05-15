@@ -113,13 +113,14 @@ function verifyData() {
     if(!verifyEmployeeDetails(firstName, lastName, phone, cnp, bday, alertPlaceholder)) return false;
 
     // Account
-    const email = document.getElementById('email').value;
+    let email = document.getElementById('email').value;
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
     const confirm = document.getElementById('confirm').value;
 
     if(!verifyAccountDetails(email, username, password, confirm, alertPlaceholder)) return false;
 
+    email.concat('@', domain);
     const employee = {
         firstName,
         lastName,

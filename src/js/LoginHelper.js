@@ -11,8 +11,10 @@ async function executeLogin(username, password) {
     console.log(response);
 
     if(response.status == 200) {
-        global.window.sessionStorage.setItem('access_token', response.accessToken);
-        global.window.sessionStorage.setItem('refresh_token', response.refreshToken);
+        global.window.sessionStorage.setItem('accessToken', response.accessToken);
+        global.window.sessionStorage.setItem('refreshToken', response.refreshToken);
+        global.window.sessionStorage.setItem('roles', response.roles);
+        global.window.sessionStorage.setItem('username', username);
     } else {
         const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
         helperModule.showAlert("There was an error logging in. Please try again.", 'danger', alertPlaceholder);
@@ -38,7 +40,7 @@ function verifyCredentials(username, password) {
 }
 
 function isRegistered() {
-    const queryString = window.location.search;
+    const queryString = global.window.location.search;
     const urlParams = new URLSearchParams(queryString);
 
     if(urlParams.has('registered')) {

@@ -4386,77 +4386,63 @@ module.exports = {
 
 },{"./helpers/bind":22}],37:[function(require,module,exports){
 (function (global){(function (){
-// Javascript script which will be bundled and used inside the Login.html page.
-const securityModule = require('./modules/Security');
-const helperModule = require('./modules/Helper.js');
+const userModule = require('./modules/User.js');
 
-async function executeLogin(username, password) {
-    console.log('Logging in...');
-    console.log(username);
-    console.log(password);
-
-    const response = await securityModule.requestLogin(username, password);
-    console.log(response);
+async function getMainPageDetails(username, tokens) {
+    let response = await userModule.getMainPageDetails(username, tokens);
 
     if(response.status == 200) {
-        global.window.sessionStorage.setItem('accessToken', response.accessToken);
-        global.window.sessionStorage.setItem('refreshToken', response.refreshToken);
-        global.window.sessionStorage.setItem('roles', response.roles);
-        global.window.sessionStorage.setItem('username', username);
-    } else {
-        const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
-        helperModule.showAlert("There was an error logging in. Please try again.", 'danger', alertPlaceholder);
-    }
+        let depsCard = '';
+        const departments = response.departments;
+        let number = 0;
+        for(const department of departments) {
+            const depCard = `
+                <div class="col-6">
+                    <div class="card">
+                        <div class="card-header text-white">${department.name}</div>
+                        <div class="card-body">
+                            <form action="DepartmentEmployees.html" method="get" class="container-fluid justify-content-center">
+                                <input type="hidden" name="department" value="${department.name}">
+                                <div class="mx-auto col-4">
+                                    <input class="btn btn-primary btn-lg" type="submit" value="Employees">
+                                </div>
+                            </form><br>
+                            <form action="Board.html" method="get" class="container-fluid justify-content-center">
+                                <input type="hidden" name="department" value="${department.name}">
+                                <div class="col-4 mx-auto">
+                                    <input class="btn btn-primary btn-lg" type="submit" value="Boards">
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            `;
+            depsCard = depsCard.concat(depCard);
+            number += 1;
+            if(number == 2) {
+                number = 0;
+            }
+        }
 
-    return response.status;
+        const orgCard = `
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header text-white">${response.organisation.name}</div>
+                <div class="card-body">
+                    ${depsCard}
+                </div>
+            </div>
+        </div>
+        `;
+
+        const replacement = document.getElementById('boards');
+        replacement.innerHTML = orgCard;
+    }
 }
 
-function verifyCredentials(username, password) {
-    const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
-
-    if(helperModule.verifyInputIsEmpty(username)) {
-        helperModule.showAlert("Please insert a valid username.", 'danger', alertPlaceholder);
-        return false;
-    }
-
-    if(helperModule.verifyInputIsEmpty(password)) {
-        helperModule.showAlert("Please insert a valid password.", 'danger', alertPlaceholder);
-        return false;
-    }
-
-    return true;
-}
-
-function isRegistered() {
-    const queryString = global.window.location.search;
-    const urlParams = new URLSearchParams(queryString);
-
-    if(urlParams.has('registered')) {
-        const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
-        helperModule.showAlert("Your organisation has been registered. Please log in.", 'success', alertPlaceholder);
-    }
-}
-
-global.window.verifyCredentials = verifyCredentials;
-global.window.executeLogin = executeLogin;
-global.window.isRegistered = isRegistered;
+global.window.getMainPageDetails = getMainPageDetails;
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./modules/Helper.js":38,"./modules/Security":39}],38:[function(require,module,exports){
-function showAlert(message, type, alertPlaceholder) {
-    alertPlaceholder.innerHTML = '<div class="alert alert-' + type + ' alert-dismissible" role="alert">' + message + '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>';
-}
-
-function verifyInputIsEmpty(input) {
-    if(input == null || input == '') {
-        return true;
-    }
-
-    return false;
-}
-
-module.exports.showAlert = showAlert;
-module.exports.verifyInputIsEmpty = verifyInputIsEmpty;
-},{}],39:[function(require,module,exports){
+},{"./modules/User.js":39}],38:[function(require,module,exports){
 const axios = require("axios");
 
 async function requestRegister(registerData) {
@@ -4582,4 +4568,68 @@ module.exports.requestLogin = requestLogin;
 module.exports.requestRegister = requestRegister;
 module.exports.requestTokenRefresh = requestTokenRefresh;
 module.exports.ping = ping;
-},{"axios":5}]},{},[37]);
+},{"axios":5}],39:[function(require,module,exports){
+(function (global){(function (){
+const axios = require("axios");
+const securityModule = require("./Security.js");
+
+async function redirectToLogin(tokens) {
+    const pingResult = await securityModule.ping(tokens);
+    if(pingResult == null) {
+        global.window.location.replace("Login.html");
+        return false;
+    } else {
+        global.window.sessionStorage.setItem('accessToken', pingResult.accessToken);
+        global.window.sessionStorage.setItem('refreshToken', pingResult.refreshToken);
+        return pingResult;
+    }
+}
+
+async function getMainPageDetails(username, tokens) {
+    tokens = await redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/user/main/organisation/${username}`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        }
+        let response;
+
+        await axios
+            .get(url, config)
+            .then(function (resp) {
+                console.log(resp);
+                const organisation = {
+                    id: resp.data.id,
+                    name: resp.data.name,
+                    sign: resp.data.sign,
+                    dateCreated: resp.data.dateCreated,
+                    domain: resp.data.domain,
+                    cui: resp.data.cui
+                };
+                const departments = resp.data.departments;
+
+                response = {
+                    status: resp.status,
+                    organisation,
+                    departments
+                }
+            })
+            .catch(function (err) {
+                console.log(err);
+                response = {
+                    status: err.response.status,
+                    message: err.message,
+                    serverMessage: err.response.data.error_message
+                }
+            });
+
+        return response;
+    }
+}
+
+module.exports.getMainPageDetails = getMainPageDetails;
+}).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./Security.js":38,"axios":5}]},{},[37]);
