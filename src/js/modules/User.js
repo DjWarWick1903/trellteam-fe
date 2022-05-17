@@ -1,20 +1,9 @@
 const axios = require("axios");
 const securityModule = require("./Security.js");
-
-async function redirectToLogin(tokens) {
-    const pingResult = await securityModule.ping(tokens);
-    if(pingResult == null) {
-        global.window.location.replace("Login.html");
-        return false;
-    } else {
-        global.window.sessionStorage.setItem('accessToken', pingResult.accessToken);
-        global.window.sessionStorage.setItem('refreshToken', pingResult.refreshToken);
-        return pingResult;
-    }
-}
+const helperModule = require('./Helper.js');
 
 async function getMainPageDetails(username, tokens) {
-    tokens = await redirectToLogin(tokens);
+    tokens = await helperModule.redirectToLogin(tokens);
 
     if(tokens != false) {
         const url = `http://localhost:8080/user/main/organisation/${username}`;
@@ -25,37 +14,138 @@ async function getMainPageDetails(username, tokens) {
         }
         let response;
 
-        await axios
-            .get(url, config)
-            .then(function (resp) {
-                console.log(resp);
-                const organisation = {
-                    id: resp.data.id,
-                    name: resp.data.name,
-                    sign: resp.data.sign,
-                    dateCreated: resp.data.dateCreated,
-                    domain: resp.data.domain,
-                    cui: resp.data.cui
-                };
-                const departments = resp.data.departments;
+        try {
+            await axios
+                .get(url, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    const organisation = {
+                        id: resp.data.id,
+                        name: resp.data.name,
+                        sign: resp.data.sign,
+                        dateCreated: resp.data.dateCreated,
+                        domain: resp.data.domain,
+                        cui: resp.data.cui
+                    };
+                    const departments = resp.data.departments;
 
-                response = {
-                    status: resp.status,
-                    organisation,
-                    departments
-                }
-            })
-            .catch(function (err) {
-                console.log(err);
-                response = {
-                    status: err.response.status,
-                    message: err.message,
-                    serverMessage: err.response.data.error_message
-                }
-            });
+                    response = {
+                        status: resp.status,
+                        organisation,
+                        departments
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch(err) {
+            response = {
+                status: 404,
+                message: err.message,
+                serverMessage: 'Server could not be reached'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function getOrganisationEmployees(idOrg, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/user/main/organisation/employees/${idOrg}`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        }
+        let response;
+
+        try {
+            await axios
+                .get(url, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    const employees = resp.data;
+
+                    response = {
+                        status: resp.status,
+                        employees
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function createDepartment(idOrganisation, departmentName, idManager, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/user/main/organisation/department`;
+        const data = {
+            depName: departmentName,
+            idOrg: idOrganisation,
+            idMan: idManager
+        };
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        };
+        let response;
+
+        try {
+            await axios
+                .post(url, data, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    response = {
+                        status: resp.status,
+                        department: resp.data.department
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
 
         return response;
     }
 }
 
 module.exports.getMainPageDetails = getMainPageDetails;
+module.exports.getOrganisationEmployees = getOrganisationEmployees;
+module.exports.createDepartment = createDepartment;

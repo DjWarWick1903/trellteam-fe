@@ -4393,22 +4393,22 @@ const securityModule = require('./modules/Security.js');
 
 function verifyOrganisationDetails(name, sign, cui, domain, alertPlaceholder) {
     if (helperModule.verifyInputIsEmpty(name)) {
-        helperModule.showAlert('Please specify the name of the organisation.', 'danger', alertPlaceholder);
+        helperModule.showAlert('Please specify the name of the organisation.', 'info', alertPlaceholder);
         return false;
     }
 
     if (helperModule.verifyInputIsEmpty(sign)) {
-        helperModule.showAlert('Please specify the sign of the organisation.', 'danger', alertPlaceholder);
+        helperModule.showAlert('Please specify the sign of the organisation.', 'info', alertPlaceholder);
         return false;
     }
 
     if (helperModule.verifyInputIsEmpty(cui)) {
-        helperModule.showAlert('Please specify the CUI of the organisation.', 'danger', alertPlaceholder);
+        helperModule.showAlert('Please specify the CUI of the organisation.', 'info', alertPlaceholder);
         return false;
     }
 
     if (helperModule.verifyInputIsEmpty(domain)) {
-        helperModule.showAlert('Please specify the domain of the organisation.', 'danger', alertPlaceholder);
+        helperModule.showAlert('Please specify the domain of the organisation.', 'info', alertPlaceholder);
         return false;
     }
 
@@ -4417,27 +4417,27 @@ function verifyOrganisationDetails(name, sign, cui, domain, alertPlaceholder) {
 
 function verifyEmployeeDetails(firstName, lastName, phone, cnp, bday, alertPlaceholder) {
     if (helperModule.verifyInputIsEmpty(firstName)) {
-        helperModule.showAlert('Please specify the first name of the admin employee.', 'danger', alertPlaceholder);
+        helperModule.showAlert('Please specify the first name of the admin employee.', 'info', alertPlaceholder);
         return false;
     }
 
     if (helperModule.verifyInputIsEmpty(lastName)) {
-        helperModule.showAlert('Please specify the last name of the admin employee.', 'danger', alertPlaceholder);
+        helperModule.showAlert('Please specify the last name of the admin employee.', 'info', alertPlaceholder);
         return false;
     }
 
     if (helperModule.verifyInputIsEmpty(phone)) {
-        helperModule.showAlert('Please specify the phone of the admin employee.', 'danger', alertPlaceholder);
+        helperModule.showAlert('Please specify the phone of the admin employee.', 'info', alertPlaceholder);
         return false;
     }
 
     if (helperModule.verifyInputIsEmpty(cnp)) {
-        helperModule.showAlert('Please specify the cnp of the admin employee.', 'danger', alertPlaceholder);
+        helperModule.showAlert('Please specify the cnp of the admin employee.', 'info', alertPlaceholder);
         return false;
     }
 
     if (helperModule.verifyInputIsEmpty(bday)) {
-        helperModule.showAlert('Please specify the birthday of the admin employee.', 'danger', alertPlaceholder);
+        helperModule.showAlert('Please specify the birthday of the admin employee.', 'info', alertPlaceholder);
         return false;
     }
 
@@ -4446,27 +4446,27 @@ function verifyEmployeeDetails(firstName, lastName, phone, cnp, bday, alertPlace
 
 function verifyAccountDetails(email, username, password, confirm, alertPlaceholder) {
     if (helperModule.verifyInputIsEmpty(email)) {
-        helperModule.showAlert('Please set an email for the admin account.', 'danger', alertPlaceholder);
+        helperModule.showAlert('Please set an email for the admin account.', 'info', alertPlaceholder);
         return false;
     }
 
     if (helperModule.verifyInputIsEmpty(username)) {
-        helperModule.showAlert('Please set an username for the admin account.', 'danger', alertPlaceholder);
+        helperModule.showAlert('Please set an username for the admin account.', 'info', alertPlaceholder);
         return false;
     }
 
     if (helperModule.verifyInputIsEmpty(password)) {
-        helperModule.showAlert('Please set a password for the admin account.', 'danger', alertPlaceholder);
+        helperModule.showAlert('Please set a password for the admin account.', 'info', alertPlaceholder);
         return false;
     }
 
     if (helperModule.verifyInputIsEmpty(confirm)) {
-        helperModule.showAlert('Please confirm the password for the admin account.', 'danger', alertPlaceholder);
+        helperModule.showAlert('Please confirm the password for the admin account.', 'info', alertPlaceholder);
         return false;
     }
 
     if (password != confirm) {
-        helperModule.showAlert('The password confirmation does not match with the chosen password!', 'danger', alertPlaceholder);
+        helperModule.showAlert('The password confirmation does not match with the chosen password!', 'warning', alertPlaceholder);
         return false;
     }
 
@@ -4555,8 +4555,17 @@ global.window.verifyData = verifyData;
 global.window.executeRegister = executeRegister;
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./modules/Helper.js":38,"./modules/Security.js":39}],38:[function(require,module,exports){
+(function (global){(function (){
+const securityModule = require("./Security");
+
 function showAlert(message, type, alertPlaceholder) {
-    alertPlaceholder.innerHTML = '<div class="alert alert-' + type + ' alert-dismissible" role="alert">' + message + '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>';
+    const alertHTML = `
+        <div class="alert alert-${type} alert-dismissible" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    `;
+    alertPlaceholder.innerHTML = alertHTML;
 }
 
 function verifyInputIsEmpty(input) {
@@ -4567,29 +4576,58 @@ function verifyInputIsEmpty(input) {
     return false;
 }
 
+async function redirectToLogin(tokens) {
+    //console.log(tokens);
+    if(typeof tokens === 'undefined' || tokens.accessToken == null || tokens.refreshToken == null) {
+        global.window.location.replace("Login.html");
+        return false;
+    }
+
+    const pingResult = await securityModule.ping(tokens);
+    if(pingResult == null) {
+        global.window.location.replace("Login.html");
+        return false;
+    } else {
+        global.window.sessionStorage.setItem('accessToken', pingResult.accessToken);
+        global.window.sessionStorage.setItem('refreshToken', pingResult.refreshToken);
+        return pingResult;
+    }
+}
+
+module.exports.redirectToLogin = redirectToLogin;
 module.exports.showAlert = showAlert;
 module.exports.verifyInputIsEmpty = verifyInputIsEmpty;
-},{}],39:[function(require,module,exports){
+}).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./Security":39}],39:[function(require,module,exports){
 const axios = require("axios");
 
 async function requestRegister(registerData) {
     const url = 'http://localhost:8080/security/organisation/register';
     let response;
 
-    await axios
-        .post(url, registerData)
-        .then(function (resp) {
-            response = {
-                status: resp.status
-            }
-        })
-        .catch(function (err) {
-            response = {
-                status: err.response.status,
-                message: err.message,
-                serverMessage: err.response.data.error_message
-            }
-        });
+    try {
+        await axios
+            .post(url, registerData)
+            .then(function (resp) {
+                response = {
+                    status: resp.status
+                }
+            })
+            .catch(function (err) {
+                response = {
+                    status: err.response.status,
+                    message: err.message,
+                    serverMessage: err.response.data.error_message
+                }
+            });
+    } catch(err) {
+        response = {
+            status: 900,
+            message: err.message,
+            serverMessage: 'Internal error'
+        }
+    }
+
 
     return response;
 }
@@ -4602,23 +4640,31 @@ async function requestLogin(user, pass) {
     const url = 'http://localhost:8080/security/login';
     let response;
 
-    await axios
-        .post(url, data)
-        .then(function (resp) {
-            response = {
-                status: resp.status,
-                accessToken: resp.data.access_token,
-                refreshToken: resp.data.refresh_token
-            }
-            //axios.defaults.headers.common['Authorization'] = `Token: ${response.accessToken}`;
-        })
-        .catch(function (err) {
-            response = {
-                status: err.response.status,
-                message: err.message,
-                serverMessage: err.response.data.error_message
-            }
-        });
+    try {
+        await axios
+            .post(url, data)
+            .then(function (resp) {
+                response = {
+                    status: resp.status,
+                    accessToken: resp.data.access_token,
+                    refreshToken: resp.data.refresh_token
+                };
+                //axios.defaults.headers.common['Authorization'] = `Token: ${response.accessToken}`;
+            })
+            .catch(function (err) {
+                response = {
+                    status: err.response.status,
+                    message: err.message,
+                    serverMessage: err.response.data.error_message
+                };
+            });
+    } catch(err) {
+        response = {
+            status: 900,
+            message: err.message,
+            serverMessage: 'Internal error.'
+        };
+    }
 
     return response;
 }
@@ -4632,29 +4678,38 @@ async function requestTokenRefresh(refreshToken) {
     }
     let response;
 
-    await axios
-        .get(url, config)
-        .then(function (resp) {
-            console.log(resp);
-            response = {
-                status: resp.status,
-                accessToken: resp.data.access_token,
-                refreshToken: resp.data.refresh_token
-            }
-        })
-        .catch(function (err) {
-            console.log(err);
-            response = {
-                status: err.response.status,
-                message: err.message,
-                serverMessage: err.response.data.error_message
-            }
-        });
+    try {
+        await axios
+            .get(url, config)
+            .then(function (resp) {
+                console.log(resp);
+                response = {
+                    status: resp.status,
+                    accessToken: resp.data.access_token,
+                    refreshToken: resp.data.refresh_token
+                }
+            })
+            .catch(function (err) {
+                console.log(err);
+                response = {
+                    status: err.response.status,
+                    message: err.message,
+                    serverMessage: err.response.data.error_message
+                }
+            });
+    } catch(e) {
+        response = {
+            status: 900,
+            message: e.message,
+            serverMessage: 'Internal error.'
+        }
+    }
 
     return response;
 }
 
 async function ping(tokens) {
+    if(typeof tokens === 'undefined' || tokens == null) return null;
     const url = 'http://localhost:8080/security/ping';
     const config = {
         headers: {
@@ -4663,18 +4718,22 @@ async function ping(tokens) {
     }
     let response;
 
-    await axios
-        .get(url, config)
-        .then(function (resp) {
-            console.log(resp);
-            response = tokens;
-        })
-        .catch(function (err) {
-            console.log(err);
-            if(err.response.data.error_message.includes('The Token has expired')) {
-                response = null;
-            }
-        });
+    try {
+        await axios
+            .get(url, config)
+            .then(function (resp) {
+                console.log(resp);
+                response = tokens;
+            })
+            .catch(function (err) {
+                console.log(err);
+                if(err.response.data.error_message.includes('The Token has expired')) {
+                    response = null;
+                }
+            });
+    } catch(e) {
+        response = null;
+    }
 
     if(response == null) {
         response = requestTokenRefresh(token.refreshToken);

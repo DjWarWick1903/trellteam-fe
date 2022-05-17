@@ -5,22 +5,22 @@ const securityModule = require('./modules/Security.js');
 
 function verifyOrganisationDetails(name, sign, cui, domain, alertPlaceholder) {
     if (helperModule.verifyInputIsEmpty(name)) {
-        helperModule.showAlert('Please specify the name of the organisation.', 'danger', alertPlaceholder);
+        helperModule.showAlert('Please specify the name of the organisation.', 'info', alertPlaceholder);
         return false;
     }
 
     if (helperModule.verifyInputIsEmpty(sign)) {
-        helperModule.showAlert('Please specify the sign of the organisation.', 'danger', alertPlaceholder);
+        helperModule.showAlert('Please specify the sign of the organisation.', 'info', alertPlaceholder);
         return false;
     }
 
     if (helperModule.verifyInputIsEmpty(cui)) {
-        helperModule.showAlert('Please specify the CUI of the organisation.', 'danger', alertPlaceholder);
+        helperModule.showAlert('Please specify the CUI of the organisation.', 'info', alertPlaceholder);
         return false;
     }
 
     if (helperModule.verifyInputIsEmpty(domain)) {
-        helperModule.showAlert('Please specify the domain of the organisation.', 'danger', alertPlaceholder);
+        helperModule.showAlert('Please specify the domain of the organisation.', 'info', alertPlaceholder);
         return false;
     }
 
@@ -29,27 +29,27 @@ function verifyOrganisationDetails(name, sign, cui, domain, alertPlaceholder) {
 
 function verifyEmployeeDetails(firstName, lastName, phone, cnp, bday, alertPlaceholder) {
     if (helperModule.verifyInputIsEmpty(firstName)) {
-        helperModule.showAlert('Please specify the first name of the admin employee.', 'danger', alertPlaceholder);
+        helperModule.showAlert('Please specify the first name of the admin employee.', 'info', alertPlaceholder);
         return false;
     }
 
     if (helperModule.verifyInputIsEmpty(lastName)) {
-        helperModule.showAlert('Please specify the last name of the admin employee.', 'danger', alertPlaceholder);
+        helperModule.showAlert('Please specify the last name of the admin employee.', 'info', alertPlaceholder);
         return false;
     }
 
     if (helperModule.verifyInputIsEmpty(phone)) {
-        helperModule.showAlert('Please specify the phone of the admin employee.', 'danger', alertPlaceholder);
+        helperModule.showAlert('Please specify the phone of the admin employee.', 'info', alertPlaceholder);
         return false;
     }
 
     if (helperModule.verifyInputIsEmpty(cnp)) {
-        helperModule.showAlert('Please specify the cnp of the admin employee.', 'danger', alertPlaceholder);
+        helperModule.showAlert('Please specify the cnp of the admin employee.', 'info', alertPlaceholder);
         return false;
     }
 
     if (helperModule.verifyInputIsEmpty(bday)) {
-        helperModule.showAlert('Please specify the birthday of the admin employee.', 'danger', alertPlaceholder);
+        helperModule.showAlert('Please specify the birthday of the admin employee.', 'info', alertPlaceholder);
         return false;
     }
 
@@ -58,27 +58,27 @@ function verifyEmployeeDetails(firstName, lastName, phone, cnp, bday, alertPlace
 
 function verifyAccountDetails(email, username, password, confirm, alertPlaceholder) {
     if (helperModule.verifyInputIsEmpty(email)) {
-        helperModule.showAlert('Please set an email for the admin account.', 'danger', alertPlaceholder);
+        helperModule.showAlert('Please set an email for the admin account.', 'info', alertPlaceholder);
         return false;
     }
 
     if (helperModule.verifyInputIsEmpty(username)) {
-        helperModule.showAlert('Please set an username for the admin account.', 'danger', alertPlaceholder);
+        helperModule.showAlert('Please set an username for the admin account.', 'info', alertPlaceholder);
         return false;
     }
 
     if (helperModule.verifyInputIsEmpty(password)) {
-        helperModule.showAlert('Please set a password for the admin account.', 'danger', alertPlaceholder);
+        helperModule.showAlert('Please set a password for the admin account.', 'info', alertPlaceholder);
         return false;
     }
 
     if (helperModule.verifyInputIsEmpty(confirm)) {
-        helperModule.showAlert('Please confirm the password for the admin account.', 'danger', alertPlaceholder);
+        helperModule.showAlert('Please confirm the password for the admin account.', 'info', alertPlaceholder);
         return false;
     }
 
     if (password != confirm) {
-        helperModule.showAlert('The password confirmation does not match with the chosen password!', 'danger', alertPlaceholder);
+        helperModule.showAlert('The password confirmation does not match with the chosen password!', 'warning', alertPlaceholder);
         return false;
     }
 

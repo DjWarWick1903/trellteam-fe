@@ -4431,27 +4431,80 @@ async function getOrganisationDetails(username, tokens) {
 
 global.window.getOrganisationDetails = getOrganisationDetails;
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./modules/User.js":39}],38:[function(require,module,exports){
+},{"./modules/User.js":40}],38:[function(require,module,exports){
+(function (global){(function (){
+const securityModule = require("./Security");
+
+function showAlert(message, type, alertPlaceholder) {
+    const alertHTML = `
+        <div class="alert alert-${type} alert-dismissible" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    `;
+    alertPlaceholder.innerHTML = alertHTML;
+}
+
+function verifyInputIsEmpty(input) {
+    if(input == null || input == '') {
+        return true;
+    }
+
+    return false;
+}
+
+async function redirectToLogin(tokens) {
+    //console.log(tokens);
+    if(typeof tokens === 'undefined' || tokens.accessToken == null || tokens.refreshToken == null) {
+        global.window.location.replace("Login.html");
+        return false;
+    }
+
+    const pingResult = await securityModule.ping(tokens);
+    if(pingResult == null) {
+        global.window.location.replace("Login.html");
+        return false;
+    } else {
+        global.window.sessionStorage.setItem('accessToken', pingResult.accessToken);
+        global.window.sessionStorage.setItem('refreshToken', pingResult.refreshToken);
+        return pingResult;
+    }
+}
+
+module.exports.redirectToLogin = redirectToLogin;
+module.exports.showAlert = showAlert;
+module.exports.verifyInputIsEmpty = verifyInputIsEmpty;
+}).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./Security":39}],39:[function(require,module,exports){
 const axios = require("axios");
 
 async function requestRegister(registerData) {
     const url = 'http://localhost:8080/security/organisation/register';
     let response;
 
-    await axios
-        .post(url, registerData)
-        .then(function (resp) {
-            response = {
-                status: resp.status
-            }
-        })
-        .catch(function (err) {
-            response = {
-                status: err.response.status,
-                message: err.message,
-                serverMessage: err.response.data.error_message
-            }
-        });
+    try {
+        await axios
+            .post(url, registerData)
+            .then(function (resp) {
+                response = {
+                    status: resp.status
+                }
+            })
+            .catch(function (err) {
+                response = {
+                    status: err.response.status,
+                    message: err.message,
+                    serverMessage: err.response.data.error_message
+                }
+            });
+    } catch(err) {
+        response = {
+            status: 900,
+            message: err.message,
+            serverMessage: 'Internal error'
+        }
+    }
+
 
     return response;
 }
@@ -4464,23 +4517,31 @@ async function requestLogin(user, pass) {
     const url = 'http://localhost:8080/security/login';
     let response;
 
-    await axios
-        .post(url, data)
-        .then(function (resp) {
-            response = {
-                status: resp.status,
-                accessToken: resp.data.access_token,
-                refreshToken: resp.data.refresh_token
-            }
-            //axios.defaults.headers.common['Authorization'] = `Token: ${response.accessToken}`;
-        })
-        .catch(function (err) {
-            response = {
-                status: err.response.status,
-                message: err.message,
-                serverMessage: err.response.data.error_message
-            }
-        });
+    try {
+        await axios
+            .post(url, data)
+            .then(function (resp) {
+                response = {
+                    status: resp.status,
+                    accessToken: resp.data.access_token,
+                    refreshToken: resp.data.refresh_token
+                };
+                //axios.defaults.headers.common['Authorization'] = `Token: ${response.accessToken}`;
+            })
+            .catch(function (err) {
+                response = {
+                    status: err.response.status,
+                    message: err.message,
+                    serverMessage: err.response.data.error_message
+                };
+            });
+    } catch(err) {
+        response = {
+            status: 900,
+            message: err.message,
+            serverMessage: 'Internal error.'
+        };
+    }
 
     return response;
 }
@@ -4494,29 +4555,38 @@ async function requestTokenRefresh(refreshToken) {
     }
     let response;
 
-    await axios
-        .get(url, config)
-        .then(function (resp) {
-            console.log(resp);
-            response = {
-                status: resp.status,
-                accessToken: resp.data.access_token,
-                refreshToken: resp.data.refresh_token
-            }
-        })
-        .catch(function (err) {
-            console.log(err);
-            response = {
-                status: err.response.status,
-                message: err.message,
-                serverMessage: err.response.data.error_message
-            }
-        });
+    try {
+        await axios
+            .get(url, config)
+            .then(function (resp) {
+                console.log(resp);
+                response = {
+                    status: resp.status,
+                    accessToken: resp.data.access_token,
+                    refreshToken: resp.data.refresh_token
+                }
+            })
+            .catch(function (err) {
+                console.log(err);
+                response = {
+                    status: err.response.status,
+                    message: err.message,
+                    serverMessage: err.response.data.error_message
+                }
+            });
+    } catch(e) {
+        response = {
+            status: 900,
+            message: e.message,
+            serverMessage: 'Internal error.'
+        }
+    }
 
     return response;
 }
 
 async function ping(tokens) {
+    if(typeof tokens === 'undefined' || tokens == null) return null;
     const url = 'http://localhost:8080/security/ping';
     const config = {
         headers: {
@@ -4525,18 +4595,22 @@ async function ping(tokens) {
     }
     let response;
 
-    await axios
-        .get(url, config)
-        .then(function (resp) {
-            console.log(resp);
-            response = tokens;
-        })
-        .catch(function (err) {
-            console.log(err);
-            if(err.response.data.error_message.includes('The Token has expired')) {
-                response = null;
-            }
-        });
+    try {
+        await axios
+            .get(url, config)
+            .then(function (resp) {
+                console.log(resp);
+                response = tokens;
+            })
+            .catch(function (err) {
+                console.log(err);
+                if(err.response.data.error_message.includes('The Token has expired')) {
+                    response = null;
+                }
+            });
+    } catch(e) {
+        response = null;
+    }
 
     if(response == null) {
         response = requestTokenRefresh(token.refreshToken);
@@ -4557,25 +4631,13 @@ module.exports.requestLogin = requestLogin;
 module.exports.requestRegister = requestRegister;
 module.exports.requestTokenRefresh = requestTokenRefresh;
 module.exports.ping = ping;
-},{"axios":5}],39:[function(require,module,exports){
-(function (global){(function (){
+},{"axios":5}],40:[function(require,module,exports){
 const axios = require("axios");
 const securityModule = require("./Security.js");
-
-async function redirectToLogin(tokens) {
-    const pingResult = await securityModule.ping(tokens);
-    if(pingResult == null) {
-        global.window.location.replace("Login.html");
-        return false;
-    } else {
-        global.window.sessionStorage.setItem('accessToken', pingResult.accessToken);
-        global.window.sessionStorage.setItem('refreshToken', pingResult.refreshToken);
-        return pingResult;
-    }
-}
+const helperModule = require('./Helper.js');
 
 async function getMainPageDetails(username, tokens) {
-    tokens = await redirectToLogin(tokens);
+    tokens = await helperModule.redirectToLogin(tokens);
 
     if(tokens != false) {
         const url = `http://localhost:8080/user/main/organisation/${username}`;
@@ -4586,39 +4648,139 @@ async function getMainPageDetails(username, tokens) {
         }
         let response;
 
-        await axios
-            .get(url, config)
-            .then(function (resp) {
-                console.log(resp);
-                const organisation = {
-                    id: resp.data.id,
-                    name: resp.data.name,
-                    sign: resp.data.sign,
-                    dateCreated: resp.data.dateCreated,
-                    domain: resp.data.domain,
-                    cui: resp.data.cui
-                };
-                const departments = resp.data.departments;
+        try {
+            await axios
+                .get(url, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    const organisation = {
+                        id: resp.data.id,
+                        name: resp.data.name,
+                        sign: resp.data.sign,
+                        dateCreated: resp.data.dateCreated,
+                        domain: resp.data.domain,
+                        cui: resp.data.cui
+                    };
+                    const departments = resp.data.departments;
 
-                response = {
-                    status: resp.status,
-                    organisation,
-                    departments
-                }
-            })
-            .catch(function (err) {
-                console.log(err);
-                response = {
-                    status: err.response.status,
-                    message: err.message,
-                    serverMessage: err.response.data.error_message
-                }
-            });
+                    response = {
+                        status: resp.status,
+                        organisation,
+                        departments
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch(err) {
+            response = {
+                status: 404,
+                message: err.message,
+                serverMessage: 'Server could not be reached'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function getOrganisationEmployees(idOrg, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/user/main/organisation/employees/${idOrg}`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        }
+        let response;
+
+        try {
+            await axios
+                .get(url, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    const employees = resp.data;
+
+                    response = {
+                        status: resp.status,
+                        employees
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function createDepartment(idOrganisation, departmentName, idManager, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/user/main/organisation/department`;
+        const data = {
+            depName: departmentName,
+            idOrg: idOrganisation,
+            idMan: idManager
+        };
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        };
+        let response;
+
+        try {
+            await axios
+                .post(url, data, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    response = {
+                        status: resp.status,
+                        department: resp.data.department
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
 
         return response;
     }
 }
 
 module.exports.getMainPageDetails = getMainPageDetails;
-}).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./Security.js":38,"axios":5}]},{},[37]);
+module.exports.getOrganisationEmployees = getOrganisationEmployees;
+module.exports.createDepartment = createDepartment;
+},{"./Helper.js":38,"./Security.js":39,"axios":5}]},{},[37]);

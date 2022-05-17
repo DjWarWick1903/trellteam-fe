@@ -4386,26 +4386,49 @@ module.exports = {
 
 },{"./helpers/bind":22}],37:[function(require,module,exports){
 (function (global){(function (){
-// Javascript script which will be bundled and used inside the Welcome.html page.
+const userModule = require('./modules/User.js');
+const helperModule = require('./modules/Helper.js');
 
-const helperModule = require("./modules/Helper");
+async function fillEmployeesSelect(idOrg, tokens) {
+    const response = await userModule.getOrganisationEmployees(idOrg, tokens);
+    const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
 
-function toLogin() {
-    document.choice_form.action = "Login.html";
-    document.choice_form.method = "post";
-    document.choice_form.submit();
+    if(response.status == 200) {
+        const employeesSelect = document.getElementById('floatingSelectGrid');
+        const employees = response.employees;
+
+        let employeesHTML = `<option value="undefined" id="0" selected>Undefined</option>`;
+        for(const employee of employees) {
+            const name = `${employee.firstName} ${employee.lastName}`;
+            const employeeHTML = `<option value="${name}" id="${employee.id}">${name}</option>`;
+            employeesHTML = employeesHTML.concat(employeeHTML);
+        }
+
+        employeesSelect.innerHTML = employeesHTML;
+    } else {
+        helperModule.showAlert('Employees could not be fetched because of a server problem.', 'danger', alertPlaceholder);
+    }
 }
 
-function toRegister() {
-    document.choice_form.action = "Register.html";
-    document.choice_form.method = "post";
-    document.choice_form.submit();
+async function createDepartment(idOrg, departmentName, idMan, tokens) {
+    const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
+    if(helperModule.verifyInputIsEmpty(departmentName)) {
+        helperModule.showAlert('Please specify the name of the new department.', 'info', alertPlaceholder);
+    }
+
+    const response = await userModule.createDepartment(idOrg, departmentName, idMan, tokens);
+
+    if(response.status == 201) {
+        helperModule.showAlert('Department has been created succesfully!', 'success', alertPlaceholder);
+    } else {
+        helperModule.showAlert('Department could not be created because of a server problem.', 'danger', alertPlaceholder);
+    }
 }
 
-global.window.toLogin = toLogin;
-global.window.toRegister = toRegister;
+global.window.fillEmployeesSelect = fillEmployeesSelect;
+global.window.createDepartment = createDepartment;
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./modules/Helper":38}],38:[function(require,module,exports){
+},{"./modules/Helper.js":38,"./modules/User.js":40}],38:[function(require,module,exports){
 (function (global){(function (){
 const securityModule = require("./Security");
 
@@ -4605,4 +4628,156 @@ module.exports.requestLogin = requestLogin;
 module.exports.requestRegister = requestRegister;
 module.exports.requestTokenRefresh = requestTokenRefresh;
 module.exports.ping = ping;
-},{"axios":5}]},{},[37]);
+},{"axios":5}],40:[function(require,module,exports){
+const axios = require("axios");
+const securityModule = require("./Security.js");
+const helperModule = require('./Helper.js');
+
+async function getMainPageDetails(username, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/user/main/organisation/${username}`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        }
+        let response;
+
+        try {
+            await axios
+                .get(url, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    const organisation = {
+                        id: resp.data.id,
+                        name: resp.data.name,
+                        sign: resp.data.sign,
+                        dateCreated: resp.data.dateCreated,
+                        domain: resp.data.domain,
+                        cui: resp.data.cui
+                    };
+                    const departments = resp.data.departments;
+
+                    response = {
+                        status: resp.status,
+                        organisation,
+                        departments
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch(err) {
+            response = {
+                status: 404,
+                message: err.message,
+                serverMessage: 'Server could not be reached'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function getOrganisationEmployees(idOrg, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/user/main/organisation/employees/${idOrg}`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        }
+        let response;
+
+        try {
+            await axios
+                .get(url, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    const employees = resp.data;
+
+                    response = {
+                        status: resp.status,
+                        employees
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function createDepartment(idOrganisation, departmentName, idManager, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/user/main/organisation/department`;
+        const data = {
+            depName: departmentName,
+            idOrg: idOrganisation,
+            idMan: idManager
+        };
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        };
+        let response;
+
+        try {
+            await axios
+                .post(url, data, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    response = {
+                        status: resp.status,
+                        department: resp.data.department
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
+
+        return response;
+    }
+}
+
+module.exports.getMainPageDetails = getMainPageDetails;
+module.exports.getOrganisationEmployees = getOrganisationEmployees;
+module.exports.createDepartment = createDepartment;
+},{"./Helper.js":38,"./Security.js":39,"axios":5}]},{},[37]);

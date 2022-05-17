@@ -4415,12 +4415,12 @@ function verifyCredentials(username, password) {
     const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
 
     if(helperModule.verifyInputIsEmpty(username)) {
-        helperModule.showAlert("Please insert a valid username.", 'danger', alertPlaceholder);
+        helperModule.showAlert("Please insert a valid username.", 'info', alertPlaceholder);
         return false;
     }
 
     if(helperModule.verifyInputIsEmpty(password)) {
-        helperModule.showAlert("Please insert a valid password.", 'danger', alertPlaceholder);
+        helperModule.showAlert("Please insert a valid password.", 'info', alertPlaceholder);
         return false;
     }
 
@@ -4442,8 +4442,17 @@ global.window.executeLogin = executeLogin;
 global.window.isRegistered = isRegistered;
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./modules/Helper.js":38,"./modules/Security":39}],38:[function(require,module,exports){
+(function (global){(function (){
+const securityModule = require("./Security");
+
 function showAlert(message, type, alertPlaceholder) {
-    alertPlaceholder.innerHTML = '<div class="alert alert-' + type + ' alert-dismissible" role="alert">' + message + '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>';
+    const alertHTML = `
+        <div class="alert alert-${type} alert-dismissible" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    `;
+    alertPlaceholder.innerHTML = alertHTML;
 }
 
 function verifyInputIsEmpty(input) {
@@ -4454,29 +4463,58 @@ function verifyInputIsEmpty(input) {
     return false;
 }
 
+async function redirectToLogin(tokens) {
+    //console.log(tokens);
+    if(typeof tokens === 'undefined' || tokens.accessToken == null || tokens.refreshToken == null) {
+        global.window.location.replace("Login.html");
+        return false;
+    }
+
+    const pingResult = await securityModule.ping(tokens);
+    if(pingResult == null) {
+        global.window.location.replace("Login.html");
+        return false;
+    } else {
+        global.window.sessionStorage.setItem('accessToken', pingResult.accessToken);
+        global.window.sessionStorage.setItem('refreshToken', pingResult.refreshToken);
+        return pingResult;
+    }
+}
+
+module.exports.redirectToLogin = redirectToLogin;
 module.exports.showAlert = showAlert;
 module.exports.verifyInputIsEmpty = verifyInputIsEmpty;
-},{}],39:[function(require,module,exports){
+}).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./Security":39}],39:[function(require,module,exports){
 const axios = require("axios");
 
 async function requestRegister(registerData) {
     const url = 'http://localhost:8080/security/organisation/register';
     let response;
 
-    await axios
-        .post(url, registerData)
-        .then(function (resp) {
-            response = {
-                status: resp.status
-            }
-        })
-        .catch(function (err) {
-            response = {
-                status: err.response.status,
-                message: err.message,
-                serverMessage: err.response.data.error_message
-            }
-        });
+    try {
+        await axios
+            .post(url, registerData)
+            .then(function (resp) {
+                response = {
+                    status: resp.status
+                }
+            })
+            .catch(function (err) {
+                response = {
+                    status: err.response.status,
+                    message: err.message,
+                    serverMessage: err.response.data.error_message
+                }
+            });
+    } catch(err) {
+        response = {
+            status: 900,
+            message: err.message,
+            serverMessage: 'Internal error'
+        }
+    }
+
 
     return response;
 }
@@ -4489,23 +4527,31 @@ async function requestLogin(user, pass) {
     const url = 'http://localhost:8080/security/login';
     let response;
 
-    await axios
-        .post(url, data)
-        .then(function (resp) {
-            response = {
-                status: resp.status,
-                accessToken: resp.data.access_token,
-                refreshToken: resp.data.refresh_token
-            }
-            //axios.defaults.headers.common['Authorization'] = `Token: ${response.accessToken}`;
-        })
-        .catch(function (err) {
-            response = {
-                status: err.response.status,
-                message: err.message,
-                serverMessage: err.response.data.error_message
-            }
-        });
+    try {
+        await axios
+            .post(url, data)
+            .then(function (resp) {
+                response = {
+                    status: resp.status,
+                    accessToken: resp.data.access_token,
+                    refreshToken: resp.data.refresh_token
+                };
+                //axios.defaults.headers.common['Authorization'] = `Token: ${response.accessToken}`;
+            })
+            .catch(function (err) {
+                response = {
+                    status: err.response.status,
+                    message: err.message,
+                    serverMessage: err.response.data.error_message
+                };
+            });
+    } catch(err) {
+        response = {
+            status: 900,
+            message: err.message,
+            serverMessage: 'Internal error.'
+        };
+    }
 
     return response;
 }
@@ -4519,29 +4565,38 @@ async function requestTokenRefresh(refreshToken) {
     }
     let response;
 
-    await axios
-        .get(url, config)
-        .then(function (resp) {
-            console.log(resp);
-            response = {
-                status: resp.status,
-                accessToken: resp.data.access_token,
-                refreshToken: resp.data.refresh_token
-            }
-        })
-        .catch(function (err) {
-            console.log(err);
-            response = {
-                status: err.response.status,
-                message: err.message,
-                serverMessage: err.response.data.error_message
-            }
-        });
+    try {
+        await axios
+            .get(url, config)
+            .then(function (resp) {
+                console.log(resp);
+                response = {
+                    status: resp.status,
+                    accessToken: resp.data.access_token,
+                    refreshToken: resp.data.refresh_token
+                }
+            })
+            .catch(function (err) {
+                console.log(err);
+                response = {
+                    status: err.response.status,
+                    message: err.message,
+                    serverMessage: err.response.data.error_message
+                }
+            });
+    } catch(e) {
+        response = {
+            status: 900,
+            message: e.message,
+            serverMessage: 'Internal error.'
+        }
+    }
 
     return response;
 }
 
 async function ping(tokens) {
+    if(typeof tokens === 'undefined' || tokens == null) return null;
     const url = 'http://localhost:8080/security/ping';
     const config = {
         headers: {
@@ -4550,18 +4605,22 @@ async function ping(tokens) {
     }
     let response;
 
-    await axios
-        .get(url, config)
-        .then(function (resp) {
-            console.log(resp);
-            response = tokens;
-        })
-        .catch(function (err) {
-            console.log(err);
-            if(err.response.data.error_message.includes('The Token has expired')) {
-                response = null;
-            }
-        });
+    try {
+        await axios
+            .get(url, config)
+            .then(function (resp) {
+                console.log(resp);
+                response = tokens;
+            })
+            .catch(function (err) {
+                console.log(err);
+                if(err.response.data.error_message.includes('The Token has expired')) {
+                    response = null;
+                }
+            });
+    } catch(e) {
+        response = null;
+    }
 
     if(response == null) {
         response = requestTokenRefresh(token.refreshToken);

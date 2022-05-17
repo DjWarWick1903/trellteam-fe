@@ -1,15 +1,16 @@
 const userModule = require('./modules/User.js');
+const helperModule = require("./modules/Helper");
 
 async function getMainPageDetails(username, tokens) {
     let response;
-    if(username != null && tokens.accessToken != null && tokens.refreshToken != null) {
+    if(username != null) {
         response = await userModule.getMainPageDetails(username, tokens);
     } else {
         global.window.location.replace("Login.html");
     }
 
-
     if(response.status == 200) {
+        global.window.sessionStorage.setItem('orgId', response.organisation.id);
         let depsCard = '';
         const departments = response.departments;
         let number = 0;
@@ -55,6 +56,8 @@ async function getMainPageDetails(username, tokens) {
 
         const replacement = document.getElementById('boards');
         replacement.innerHTML = orgCard;
+    } else {
+        helperModule.showAlert('Organisation data could not be fetched because of a server problem.', 'danger', alertPlaceholder);
     }
 }
 

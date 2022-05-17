@@ -27,12 +27,12 @@ function verifyCredentials(username, password) {
     const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
 
     if(helperModule.verifyInputIsEmpty(username)) {
-        helperModule.showAlert("Please insert a valid username.", 'danger', alertPlaceholder);
+        helperModule.showAlert("Please insert a valid username.", 'info', alertPlaceholder);
         return false;
     }
 
     if(helperModule.verifyInputIsEmpty(password)) {
-        helperModule.showAlert("Please insert a valid password.", 'danger', alertPlaceholder);
+        helperModule.showAlert("Please insert a valid password.", 'info', alertPlaceholder);
         return false;
     }
 
