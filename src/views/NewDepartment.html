@@ -70,6 +70,7 @@
 
         <script>
             const orgId = window.sessionStorage.getItem('orgId');
+            if(orgId == null) window.location.replace("Login.html");
             console.log(orgId);
             const tokens = {
                 accessToken: window.sessionStorage.getItem('accessToken'),

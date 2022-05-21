@@ -4386,175 +4386,141 @@ module.exports = {
 
 },{"./helpers/bind":22}],37:[function(require,module,exports){
 (function (global){(function (){
-// Javascript script which will be bundled and used inside the Register.html page.
-
 const helperModule = require('./modules/Helper.js');
+const userModule = require('./modules/User.js');
 const securityModule = require('./modules/Security.js');
 
-function verifyOrganisationDetails(name, sign, cui, domain, alertPlaceholder) {
-    if (helperModule.verifyInputIsEmpty(name)) {
-        helperModule.showAlert('Please specify the name of the organisation.', 'info', alertPlaceholder);
-        return false;
-    }
-
-    if (helperModule.verifyInputIsEmpty(sign)) {
-        helperModule.showAlert('Please specify the sign of the organisation.', 'info', alertPlaceholder);
-        return false;
-    }
-
-    if (helperModule.verifyInputIsEmpty(cui)) {
-        helperModule.showAlert('Please specify the CUI of the organisation.', 'info', alertPlaceholder);
-        return false;
-    }
-
-    if (helperModule.verifyInputIsEmpty(domain)) {
-        helperModule.showAlert('Please specify the domain of the organisation.', 'info', alertPlaceholder);
-        return false;
-    }
-
-    return true;
-}
-
-function verifyEmployeeDetails(firstName, lastName, phone, cnp, bday, alertPlaceholder) {
-    if (helperModule.verifyInputIsEmpty(firstName)) {
-        helperModule.showAlert('Please specify the first name of the admin employee.', 'info', alertPlaceholder);
-        return false;
-    }
-
-    if (helperModule.verifyInputIsEmpty(lastName)) {
-        helperModule.showAlert('Please specify the last name of the admin employee.', 'info', alertPlaceholder);
-        return false;
-    }
-
-    if (helperModule.verifyInputIsEmpty(phone)) {
-        helperModule.showAlert('Please specify the phone of the admin employee.', 'info', alertPlaceholder);
-        return false;
-    }
-
-    if (helperModule.verifyInputIsEmpty(cnp)) {
-        helperModule.showAlert('Please specify the cnp of the admin employee.', 'info', alertPlaceholder);
-        return false;
-    }
-
-    if (helperModule.verifyInputIsEmpty(bday)) {
-        helperModule.showAlert('Please specify the birthday of the admin employee.', 'info', alertPlaceholder);
-        return false;
-    }
-
-    return true;
-}
-
-function verifyAccountDetails(email, username, password, confirm, alertPlaceholder) {
-    if (helperModule.verifyInputIsEmpty(email)) {
-        helperModule.showAlert('Please set an email for the admin account.', 'info', alertPlaceholder);
-        return false;
-    }
-
-    if (helperModule.verifyInputIsEmpty(username)) {
-        helperModule.showAlert('Please set an username for the admin account.', 'info', alertPlaceholder);
-        return false;
-    }
-
-    if (helperModule.verifyInputIsEmpty(password)) {
-        helperModule.showAlert('Please set a password for the admin account.', 'info', alertPlaceholder);
-        return false;
-    }
-
-    if (helperModule.verifyInputIsEmpty(confirm)) {
-        helperModule.showAlert('Please confirm the password for the admin account.', 'info', alertPlaceholder);
-        return false;
-    }
-
-    if (password != confirm) {
-        helperModule.showAlert('The password confirmation does not match with the chosen password!', 'warning', alertPlaceholder);
-        return false;
-    }
-
-    return true;
-}
-
-function verifyData() {
+async function fillRoles(tokens) {
+    const response = await securityModule.getRoles(tokens);
     const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
 
-    // Organisation
-    const name = document.getElementById('OrgName').value;
-    const sign = document.getElementById('sign').value;
-    const cui = document.getElementById('cui').value;
-    const domain = document.getElementById('Domain').value;
+    if(response.status == 200) {
+        const rolesSelect = document.getElementById('floatingSelectGrid');
+        const roles = response.roles;
 
-    if(!verifyOrganisationDetails(name, sign, cui, domain, alertPlaceholder)) return false;
+        let rolesHTML = `<option value="undefined" id="0" selected>Undefined</option>`;
+        for(const role of roles) {
+            const roleHTML = `<option value="${role.name}" id="${role.id}">${role.name}</option>`;
+            rolesHTML = rolesHTML.concat(roleHTML);
+        }
 
-    // Department
-    const depName = document.getElementById('DepName').value;
-    if(helperModule.verifyInputIsEmpty(depName)) {
-        helperModule.showAlert('Please specify the name of the department.', 'danger', alertPlaceholder);
+        rolesSelect.innerHTML = rolesHTML;
+    } else {
+        helperModule.showAlert('Roles could not be fetched because of a server problem.', 'danger', alertPlaceholder);
+    }
+}
+
+async function fillOrganisationDetails(username, tokens) {
+    const response = await userModule.getOrganisation(username, tokens);
+    const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
+
+    if(response.status == 200) {
+        const domainField = document.getElementById('EmailDomain');
+        const domain = response.organisation.domain;
+        domainField.value = domain;
+
+        const departmentsField = document.getElementById('depSelect');
+        const departments = response.departments;
+        let depsHTML = `<option value="undefined" id="0" selected>Undefined</option>`;
+        for(const department of departments) {
+            const depHTML = `<option value="${department.name}" id="${department.id}">${department.name}</option>`;
+            depsHTML = depsHTML.concat(depHTML);
+        }
+
+        departmentsField.innerHTML = depsHTML;
+    } else {
+        helperModule.showAlert('Organisation details could not be fetched because of a server problem.', 'danger', alertPlaceholder);
+    }
+}
+
+function verifyEmployeeDetails(account, employee) {
+    const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
+
+    if (helperModule.verifyInputIsEmpty(account.username)) {
+        helperModule.showAlert('Please specify the username of the account.', 'info', alertPlaceholder);
         return false;
     }
 
-    // Employee
-    const firstName = document.getElementById('FirstName').value;
-    const lastName = document.getElementById('LastName').value;
-    const phone = document.getElementById('Phone').value;
-    const cnp = document.getElementById('cnp').value
-    const bday = document.getElementById('bday').value;
+    if (helperModule.verifyInputIsEmpty(account.email)) {
+        helperModule.showAlert('Please specify the email of the account.', 'info', alertPlaceholder);
+        return false;
+    }
 
-    if(!verifyEmployeeDetails(firstName, lastName, phone, cnp, bday, alertPlaceholder)) return false;
+    if (helperModule.verifyInputIsEmpty(account.password)) {
+        helperModule.showAlert('Please specify the password of the account.', 'info', alertPlaceholder);
+        return false;
+    }
 
-    // Account
-    let email = document.getElementById('email').value;
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-    const confirm = document.getElementById('confirm').value;
+    if (helperModule.verifyInputIsEmpty(account.confirm)) {
+        helperModule.showAlert('Please confirm the password of the account.', 'info', alertPlaceholder);
+        return false;
+    }
 
-    if(!verifyAccountDetails(email, username, password, confirm, alertPlaceholder)) return false;
+    if(account.confirm != account.password) {
+        helperModule.showAlert('The confirmation of the password does not match the password.', 'info', alertPlaceholder);
+        return false;
+    }
 
-    email.concat('@', domain);
-    const employee = {
-        firstName,
-        lastName,
-        phone,
-        cnp,
-        bday
-    };
+    if (account.roleId == 0) {
+        helperModule.showAlert('Please specify the role of the account.', 'info', alertPlaceholder);
+        return false;
+    }
 
-    const organisation = {
-        name,
-        sign,
-        cui,
-        domain
-    };
+    if (helperModule.verifyInputIsEmpty(employee.firstName)) {
+        helperModule.showAlert('Please specify the first name of the employee.', 'info', alertPlaceholder);
+        return false;
+    }
 
-    const account = {
-        email,
-        username,
-        password
-    };
+    if (helperModule.verifyInputIsEmpty(employee.lastName)) {
+        helperModule.showAlert('Please specify the last name of the employee.', 'info', alertPlaceholder);
+        return false;
+    }
 
-    return {
-        organisation,
-        depName,
-        employee,
-        account
+    if (helperModule.verifyInputIsEmpty(employee.phone)) {
+        helperModule.showAlert('Please specify the phone number of the employee.', 'info', alertPlaceholder);
+        return false;
+    }
+
+    if (helperModule.verifyInputIsEmpty(employee.lastName)) {
+        helperModule.showAlert('Please specify the birthday of the employee.', 'info', alertPlaceholder);
+        return false;
+    }
+
+    if (helperModule.verifyInputIsEmpty(employee.lastName)) {
+        helperModule.showAlert('Please specify the cnp of the employee.', 'info', alertPlaceholder);
+        return false;
+    }
+
+    if (employee.depId == 0) {
+        helperModule.showAlert('Please specify the department of the employee.', 'info', alertPlaceholder);
+        return false;
+    }
+
+    return true;
+}
+
+async function createEmployee(account, employee, tokens) {
+    if(!verifyEmployeeDetails(account, employee)) {
+        return false;
+    }
+
+    const response = await userModule.createEmployee(account, employee, tokens);
+    const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
+
+    if(response.status == 201) {
+        helperModule.showAlert('Employee has been created succesfully!', 'success', alertPlaceholder);
+        return true;
+    } else {
+        helperModule.showAlert('Organisation details could not be fetched because of a server problem.', 'danger', alertPlaceholder);
+        return false;
     }
 }
 
-async function executeRegister(registerData) {
-    console.log('Registering data...');
-
-    const response = await securityModule.requestRegister(registerData);
-
-    if(response.status != 201) {
-        const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
-        helperModule.showAlert("There was an error in the register process. Please try again.", 'danger', alertPlaceholder);
-    }
-
-    return response.status;
-}
-
-global.window.verifyData = verifyData;
-global.window.executeRegister = executeRegister;
+global.window.fillRoles = fillRoles;
+global.window.fillOrganisationDetails = fillOrganisationDetails;
+global.window.createEmployee = createEmployee;
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./modules/Helper.js":38,"./modules/Security.js":39}],38:[function(require,module,exports){
+},{"./modules/Helper.js":38,"./modules/Security.js":39,"./modules/User.js":40}],38:[function(require,module,exports){
 (function (global){(function (){
 const securityModule = require("./Security");
 
@@ -4799,4 +4765,204 @@ module.exports.requestLogin = requestLogin;
 module.exports.requestRegister = requestRegister;
 module.exports.requestTokenRefresh = requestTokenRefresh;
 module.exports.ping = ping;
-},{"./Helper":38,"axios":5}]},{},[37]);
+module.exports.getRoles = getRoles;
+},{"./Helper":38,"axios":5}],40:[function(require,module,exports){
+const axios = require("axios");
+const securityModule = require("./Security.js");
+const helperModule = require('./Helper.js');
+
+async function getOrganisation(username, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/user/main/organisation/${username}`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        }
+        let response;
+
+        try {
+            await axios
+                .get(url, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    const organisation = {
+                        id: resp.data.id,
+                        name: resp.data.name,
+                        sign: resp.data.sign,
+                        dateCreated: resp.data.dateCreated,
+                        domain: resp.data.domain,
+                        cui: resp.data.cui
+                    };
+                    const departments = resp.data.departments;
+
+                    response = {
+                        status: resp.status,
+                        organisation,
+                        departments
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch(err) {
+            response = {
+                status: 404,
+                message: err.message,
+                serverMessage: 'Server could not be reached'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function getOrganisationEmployees(idOrg, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/user/main/organisation/employees/${idOrg}`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        }
+        let response;
+
+        try {
+            await axios
+                .get(url, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    const employees = resp.data;
+
+                    response = {
+                        status: resp.status,
+                        employees
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function createDepartment(idOrganisation, departmentName, idManager, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/user/main/organisation/department`;
+        const data = {
+            depName: departmentName,
+            idOrg: idOrganisation,
+            idMan: idManager
+        };
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        };
+        let response;
+
+        try {
+            await axios
+                .post(url, data, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    response = {
+                        status: resp.status,
+                        department: resp.data.department
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function createEmployee(account, employee, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/user/main/organisation/employee`;
+        const data = {
+            account,
+            employee
+        };
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        };
+        let response;
+
+        try {
+            await axios
+                .post(url, data, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    response = {
+                        status: resp.status,
+                        department: resp.data.response
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
+
+        return response;
+    }
+}
+
+module.exports.getOrganisation = getOrganisation;
+module.exports.getOrganisationEmployees = getOrganisationEmployees;
+module.exports.createDepartment = createDepartment;
+module.exports.createEmployee = createEmployee;
+},{"./Helper.js":38,"./Security.js":39,"axios":5}]},{},[37]);

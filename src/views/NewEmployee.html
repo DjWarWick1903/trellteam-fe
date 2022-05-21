@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>TrellTeam - Login</title>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.css">
+        <link rel="stylesheet" href="/src/css/NewEmployee.css">
+        <script src="/src/js/bundles/NewEmployeeBundle.js"></script>
+    </head>
+
+    <body>
+        <div class="container">
+            <h1 class="display-1"><strong>Trell Team</strong></h1>
+            <hr>
+
+            <!-- Navbar -->
+            <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+                <div class="container-fluid">
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+                        <div class="navbar-nav">
+                            <a class="nav-link" aria-current="page" href="MainPage.html">Home</a>
+                            <a class="nav-link" href="Organisation.html">Organisation</a>
+                            <a class="nav-link" href="NewDepartment.html">Add Department</a>
+                            <a class="nav-link active" href="NewEmployee.html">Add Employee</a>
+                            <a class="nav-link me-auto" href="Login.html">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+            <div class="announcer justify-content-center d-flex" id="errorAlertPlaceholder"></div><br>
+
+            <!-- Employee form -->
+            <form id="LoginForm">
+                <div class="row">
+                    <div class="col-12 justify-content-center d-flex">
+                        <div class="card">
+                            <div class="card-header text-white">New employee</div>
+                            <div class="card-body text-center">
+                                <p class="lead" style="color: #0d6efd"><strong>Account</strong></p>
+
+                                <div class="row g-2">
+                                    <div class="input-group">
+                                        <div class="form-floating col-md">
+                                            <input type="text" class="form-control" id="floatingInputEmail">
+                                            <label for="floatingInputEmail">Email</label>
+                                        </div>
+                                        <div class="form-floating col-md-5">
+                                            <input type="text" id="EmailDomain" class="form-control" disabled>
+                                            <label for="EmailDomain">Domain</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-md">
+                                        <div class="form-floating">
+                                            <input type="text" class="form-control" id="floatingInputUser">
+                                            <label for="floatingInputUser">Username</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md">
+                                        <div class="form-floating">
+                                            <select class="form-select" id="floatingSelectGrid" aria-label="Floating label select example">
+                                                <!-- Roles -->
+                                            </select>
+                                            <label for="floatingSelectGrid">Role</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-md">
+                                        <div class="form-floating">
+                                            <input type="password" class="form-control" id="floatingInputPass">
+                                            <label for="floatingInputPass">Password</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md">
+                                        <div class="form-floating">
+                                            <input type="password" class="form-control" id="floatingInputConf">
+                                            <label for="floatingInputConf">Confirm password</label>
+                                        </div>
+                                    </div>
+                                </div><br>
+
+                                <p class="lead" style="color: #0d6efd"><strong>Employee</strong></p>
+                                <div class="row g-2">
+                                    <div class="form-floating col-md">
+                                        <input type="text" class="form-control" id="FNAddon">
+                                        <label for="FNAddon">First name</label>
+                                    </div>
+                                    <div class="form-floating col-md">
+                                        <input type="text" class="form-control" id="LNAddon">
+                                        <label for="LNAddon">Last name</label>
+                                    </div>
+                                </div>
+                                <div class="row g-2">
+                                    <div class="form-floating col-md">
+                                        <input type="text" class="form-control" id="PhoneAddon">
+                                        <label for="PhoneAddon">Phone</label>
+                                    </div>
+                                    <div class="form-floating col-md">
+                                        <input type="date" class="form-control" id="BDayAddon">
+                                        <label for="BDayAddon">Birthday</label>
+                                    </div>
+                                </div>
+                                <div class="row g-2">
+                                    <div class="form-floating col-md">
+                                        <input type="text" class="form-control" id="CNPAddon">
+                                        <label for="CNPAddon">CNP</label>
+                                    </div>
+                                    <div class="form-floating col-md">
+                                        <select class="form-select" id="depSelect" aria-label="Floating label select example">
+                                            <!-- Departments -->
+                                        </select>
+                                        <label for="depSelect">Department</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div><br>
+
+                <div class="row g-2">
+                    <div class="col-md-3 mx-auto">
+                        <input class="btn btn-secondary btn-lg" type="button" value="Clear" id="Clear">
+                        <input class="btn btn-primary btn-lg" type="button" value="Create" id="Create">
+                    </div>
+                </div>
+
+            </form>
+        </div>
+
+        <script>
+            const orgId = window.sessionStorage.getItem('orgId');
+            const username = window.sessionStorage.getItem('username');
+            if(orgId == null) window.location.replace("Login.html");
+            console.log(orgId);
+            const tokens = {
+                accessToken: window.sessionStorage.getItem('accessToken'),
+                refreshToken: window.sessionStorage.getItem('refreshToken')
+            }
+
+            window.fillRoles(tokens);
+            window.fillOrganisationDetails(username, tokens);
+
+            document.getElementById('Clear').addEventListener('click', function(e) {
+                e.preventDefault();
+                const emailField = document.getElementById('floatingInputEmail');
+                const usernameField = document.getElementById('floatingInputUser');
+                const roleField = document.getElementById('floatingSelectGrid');
+                const passField = document.getElementById('floatingInputPass');
+                const confirmField = document.getElementById('floatingInputConf');
+                const fNameField = document.getElementById('FNAddon');
+                const lNameField = document.getElementById('LNAddon');
+                const phoneField = document.getElementById('PhoneAddon');
+                const bdayField = document.getElementById('BDayAddon');
+                const cnpField = document.getElementById('CNPAddon');
+
+                emailField.value = '';
+                usernameField.value = '';
+                passField.value = '';
+                roleField.options[0].selected = 'selected';
+                confirmField.value = '';
+                fNameField.value = '';
+                lNameField.value = '';
+                phoneField.value = '';
+                bdayField.value = '';
+                cnpField.value = '';
+            });
+
+            document.getElementById('Create').addEventListener('click', async function (e) {
+                e.preventDefault();
+
+                const emailField = document.getElementById('floatingInputEmail');
+                const usernameField = document.getElementById('floatingInputUser');
+                const roleField = document.getElementById('floatingSelectGrid');
+                const depField = document.getElementById('depSelect');
+                const passField = document.getElementById('floatingInputPass');
+                const confirmField = document.getElementById('floatingInputConf');
+                const fNameField = document.getElementById('FNAddon');
+                const lNameField = document.getElementById('LNAddon');
+                const phoneField = document.getElementById('PhoneAddon');
+                const bdayField = document.getElementById('BDayAddon');
+                const cnpField = document.getElementById('CNPAddon');
+                const domainField = document.getElementById('EmailDomain');
+
+                const email = emailField.value;
+                const username = usernameField.value;
+                const password = passField.value;
+                const confirm = confirmField.value;
+                const firstName = fNameField.value;
+                const lastName = lNameField.value;
+                const phone = phoneField.value;
+                const bday = bdayField.value;
+                const cnp = cnpField.value;
+                const domain = domainField.value;
+                const roleId = roleField[roleField.selectedIndex].id;
+                const depId = depField[depField.selectedIndex].id;
+
+                const account = {
+                    email: `${email}@${domain}`,
+                    username,
+                    password,
+                    confirm,
+                    roleId
+                };
+
+                const employee = {
+                    firstName,
+                    lastName,
+                    phone,
+                    bday,
+                    cnp,
+                    depId
+                };
+
+                window.createEmployee(account, employee, tokens);
+            });
+        </script>
+
+        <script src="/node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>
+    </body>
+</html>

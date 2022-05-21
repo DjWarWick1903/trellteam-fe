@@ -1,4 +1,5 @@
 const axios = require("axios");
+const helperModule = require("./Helper");
 
 async function requestRegister(registerData) {
     const url = 'http://localhost:8080/security/organisation/register';
@@ -108,7 +109,7 @@ async function requestTokenRefresh(refreshToken) {
 }
 
 async function ping(tokens) {
-    if(typeof tokens === 'undefined' || tokens == null) return null;
+    if(tokens == null) return null;
     const url = 'http://localhost:8080/security/ping';
     const config = {
         headers: {
@@ -131,11 +132,11 @@ async function ping(tokens) {
                 }
             });
     } catch(e) {
-        response = null;
+        response = 'Internal error.';
     }
 
     if(response == null) {
-        response = requestTokenRefresh(token.refreshToken);
+        response = await requestTokenRefresh(token.refreshToken);
         if(response.status != 200) {
             response = null;
         } else {
@@ -144,12 +145,57 @@ async function ping(tokens) {
                 refreshToken: response.refreshToken
             }
         }
+    } else if(response == 'Internal error.') {
+        response = null;
     }
 
     return response;
+}
+
+async function getRoles(tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/security/role`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        };
+        let response;
+
+        try {
+            await axios
+                .get(url, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    response = {
+                        status: resp.status,
+                        roles: resp.data
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
+
+        return response;
+    }
 }
 
 module.exports.requestLogin = requestLogin;
 module.exports.requestRegister = requestRegister;
 module.exports.requestTokenRefresh = requestTokenRefresh;
 module.exports.ping = ping;
+module.exports.getRoles = getRoles;

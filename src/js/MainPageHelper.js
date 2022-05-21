@@ -4,7 +4,7 @@ const helperModule = require("./modules/Helper");
 async function getMainPageDetails(username, tokens) {
     let response;
     if(username != null) {
-        response = await userModule.getMainPageDetails(username, tokens);
+        response = await userModule.getOrganisation(username, tokens);
     } else {
         global.window.location.replace("Login.html");
     }

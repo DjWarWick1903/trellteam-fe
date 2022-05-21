@@ -20,7 +20,7 @@ function verifyInputIsEmpty(input) {
 
 async function redirectToLogin(tokens) {
     //console.log(tokens);
-    if(typeof tokens === 'undefined' || tokens.accessToken == null || tokens.refreshToken == null) {
+    if(tokens == null || tokens.accessToken == null || tokens.refreshToken == null) {
         global.window.location.replace("Login.html");
         return false;
     }

@@ -2,7 +2,7 @@ const axios = require("axios");
 const securityModule = require("./Security.js");
 const helperModule = require('./Helper.js');
 
-async function getMainPageDetails(username, tokens) {
+async function getOrganisation(username, tokens) {
     tokens = await helperModule.redirectToLogin(tokens);
 
     if(tokens != false) {
@@ -146,6 +146,53 @@ async function createDepartment(idOrganisation, departmentName, idManager, token
     }
 }
 
-module.exports.getMainPageDetails = getMainPageDetails;
+async function createEmployee(account, employee, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/user/main/organisation/employee`;
+        const data = {
+            account,
+            employee
+        };
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        };
+        let response;
+
+        try {
+            await axios
+                .post(url, data, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    response = {
+                        status: resp.status,
+                        department: resp.data.response
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
+
+        return response;
+    }
+}
+
+module.exports.getOrganisation = getOrganisation;
 module.exports.getOrganisationEmployees = getOrganisationEmployees;
 module.exports.createDepartment = createDepartment;
+module.exports.createEmployee = createEmployee;
