@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>TrellTeam - Login</title>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.css">
+        <link rel="stylesheet" href="/src/css/DepartmentEmployees.css">
+        <script src="/src/js/bundles/DepartmentEmployeesBundle.js"></script>
+    </head>
+
+    <body>
+        <div class="container">
+            <h1 class="display-1"><strong>Trell Team</strong></h1>
+            <hr>
+
+            <!-- Navbar -->
+            <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+                <div class="container-fluid">
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+                        <div class="navbar-nav">
+                            <a class="nav-link" aria-current="page" href="MainPage.html">Home</a>
+                            <a class="nav-link" href="Organisation.html">Organisation</a>
+                            <a class="nav-link" href="NewDepartment.html">Add Department</a>
+                            <a class="nav-link" href="NewEmployee.html">Add Employee</a>
+                            <a class="nav-link" href="AccountDetails.html">Account details</a>
+                            <a class="nav-link me-auto" href="Login.html">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+            <div class="announcer justify-content-center d-flex" id="errorAlertPlaceholder"></div><br>
+
+            <!-- Employees -->
+            <div class="row">
+                <div id="employees" class="col-12 justify-content-center d-flex">
+                    <div class="card">
+                        <div class="card-header text-white" id="header"></div>
+                        <div class="card-body">
+                            <table class="table table-primary table-hover">
+                                <thead>
+                                    <tr>
+                                        <th scope="col" style="width: 50px">ID</th>
+                                        <th scope="col" style="width: 200px">First name</th>
+                                        <th scope="col" style="width: 200px">Last name</th>
+                                        <th scope="col" style="width: 200px">Phone</th>
+                                        <th scope="col" style="width: 200px">Birthday</th>
+                                        <th scope="col" style="width: 200px">CNP</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="body">
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            const username = window.sessionStorage.getItem('username');
+            if(username == null) window.location.replace("Login.html");
+            const tokens = {
+                accessToken: window.sessionStorage.getItem('accessToken'),
+                refreshToken: window.sessionStorage.getItem('refreshToken')
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+
+            if(urlParams.has('department')) {
+                const departmentName = urlParams.get('department');
+                window.fillDepartmentEmployees(username, departmentName, tokens);
+            } else {
+                const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
+                helperModule.showAlert("Department name not found.", 'danger', alertPlaceholder);
+            }
+        </script>
+
+        <script src="/node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>
+    </body>
+</html>
