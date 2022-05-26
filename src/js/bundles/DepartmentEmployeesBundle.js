@@ -4394,6 +4394,7 @@ async function fillDepartmentEmployees(username, depName, tokens) {
     const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
 
     if(response.status == 200) {
+        const idOrg = response.organisation.id;
         const departments = response.departments;
         let employees = null;
         for(const department of departments) {
@@ -4431,11 +4432,123 @@ async function fillDepartmentEmployees(username, depName, tokens) {
 
         tableBody.innerHTML = bodyHTML;
     } else {
-        helperModule.showAlert('Employees could not be fetched because of a server problem.', 'danger', alertPlaceholder);
+        helperModule.showAlert('Department employees could not be fetched because of a server problem.', 'danger', alertPlaceholder);
     }
 }
 
+function employeeDifference(orgEmployees, depEmployees) {
+    let employees = [];
+    for(const orgEmp of orgEmployees) {
+        let isAssigned = false;
+        for(const depEmp of depEmployees) {
+            if(depEmp.id == orgEmp.id) {
+                isAssigned = true;
+                break;
+            }
+        }
+
+        if(isAssigned == false) {
+            employees = employees.concat(orgEmp);
+        }
+    }
+
+    return employees;
+}
+
+function employeesUnion(orgEmployees, depEmployees) {
+    let employees = orgEmployees.filter(employee => !depEmployees.includes(employee));
+
+    return [...employees, ...depEmployees];
+}
+
+async function fillOrganisationEmployees(idOrg, username, depName, tokens) {
+    const responseOrg = await userModule.getOrganisationEmployees(idOrg, tokens);
+    const responseDep = await userModule.getOrganisation(username, tokens);
+    const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
+
+    if(responseOrg.status == 200 && responseDep.status == 200) {
+        const orgEmployees = responseOrg.employees;
+        const departments = responseDep.departments;
+
+        let depEmployees = new Array();
+        for(const department of departments) {
+            if(department.name == depName) {
+                depEmployees = department.employees;
+                console.log(depEmployees);
+                break;
+            }
+        }
+
+        const employees = employeeDifference(orgEmployees, depEmployees);
+        let employeesHTML = `<option value="undefined" id="0" selected>Undefined</option>`;
+        if(Array.isArray(employees)) {
+            for (const employee of employees) {
+                const empHTML = `<option value="${employee.firstName} ${employee.lastName}" id="${employee.id}">${employee.firstName} ${employee.lastName}</option>`;
+                employeesHTML = employeesHTML.concat(empHTML);
+            }
+        } else {
+            const empHTML = `<option value="${employees.firstName} ${employees.lastName}" id="${employees.id}">${employees.firstName} ${employees.lastName}</option>`;
+            employeesHTML = employeesHTML.concat(empHTML);
+        }
+
+        const employeesSelect = document.getElementById('employeeList');
+        employeesSelect.innerHTML = employeesHTML;
+
+        employeesHTML = `<option value="undefined" id="0" selected>Undefined</option>`;
+        for (const employee of orgEmployees) {
+            const empHTML = `<option value="${employee.firstName} ${employee.lastName}" id="${employee.id}">${employee.firstName} ${employee.lastName}</option>`;
+            employeesHTML = employeesHTML.concat(empHTML);
+        }
+        const employeesSelectDel = document.getElementById('employeeListDel');
+        employeesSelectDel.innerHTML = employeesHTML;
+    } else {
+        helperModule.showAlert('Organisation employees could not be fetched because of a server problem.', 'danger', alertPlaceholder);
+    }
+}
+
+async function assignEmployee(idOrg, idEmp, depName, tokens) {
+    const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
+    if(idEmp == null || idEmp == 0) {
+        helperModule.showAlert('Please choose an employee to assign from the select element.', 'info', alertPlaceholder);
+        return false;
+    }
+
+    const response = await userModule.assignEmployeeToDepartment(idOrg, idEmp, depName, tokens);
+
+    if(response.status == 200) {
+        return true;
+    } else {
+        helperModule.showAlert('Employee could not be assigned to the department because of a server problem.', 'danger', alertPlaceholder);
+        return false;
+    }
+}
+
+async function unassignEmployee(idOrg, idEmp, depName, tokens) {
+    const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
+    if(idEmp == null || idEmp == 0) {
+        helperModule.showAlert('Please select an employee to unassign from the department.', 'info', alertPlaceholder);
+        return false;
+    }
+
+    const response = await userModule.unassignEmployeeFromDepartment(idOrg, idEmp, depName, tokens);
+
+    if(response.status == 200) {
+        return true;
+    } else {
+        helperModule.showAlert('Employee could not be unassigned from the department because of a server problem.', 'danger', alertPlaceholder);
+        return false;
+    }
+}
+
+function showAlert(text, type, placeholder) {
+    helperModule.showAlert(text, type, alertPlaceholder);
+}
+
 global.window.fillDepartmentEmployees = fillDepartmentEmployees;
+global.window.fillOrganisationEmployees = fillOrganisationEmployees;
+global.window.assignEmployee = assignEmployee;
+global.window.unassignEmployee = unassignEmployee;
+global.window.showAlert = showAlert;
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./modules/Helper":38,"./modules/User.js":40}],38:[function(require,module,exports){
 (function (global){(function (){
@@ -4477,9 +4590,24 @@ async function redirectToLogin(tokens) {
     }
 }
 
+function intersect(a, b) {
+    const setA = new Set(a);
+    const setB = new Set(b);
+    const intersection = new Set([...setA]).filter(x => setB.has(x));
+    return Array.from(intersection);
+}
+
+function difference(a, b) {
+    const setA = new Set(a);
+    const setB = new Set(b);
+    const difference = new Set([...setA]).filter(x => !setB.has(x));
+}
+
 module.exports.redirectToLogin = redirectToLogin;
 module.exports.showAlert = showAlert;
 module.exports.verifyInputIsEmpty = verifyInputIsEmpty;
+module.exports.intersect = intersect;
+module.exports.difference = difference;
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./Security":39}],39:[function(require,module,exports){
 const axios = require("axios");
@@ -4924,9 +5052,105 @@ async function getAccountDetails(username, tokens) {
     }
 }
 
+async function assignEmployeeToDepartment(idOrg, idEmp, depName, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/user/main/organisation/department/employee/assign`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        };
+        const data = {
+            idOrg,
+            idEmp,
+            depName
+        }
+        let response;
+
+        try {
+            await axios
+                .post(url, data, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    response = {
+                        status: resp.status,
+                        department: resp.data.department
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function unassignEmployeeFromDepartment(idOrg, idEmp, depName, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/user/main/organisation/department/employee/unassign`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        };
+        const data = {
+            idOrg,
+            idEmp,
+            depName
+        }
+        let response;
+
+        try {
+            await axios
+                .post(url, data, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    response = {
+                        status: resp.status,
+                        department: resp.data.department
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
+
+        return response;
+    }
+}
+
 module.exports.getOrganisation = getOrganisation;
 module.exports.getOrganisationEmployees = getOrganisationEmployees;
 module.exports.createDepartment = createDepartment;
 module.exports.createEmployee = createEmployee;
 module.exports.getAccountDetails = getAccountDetails;
+module.exports.assignEmployeeToDepartment = assignEmployeeToDepartment;
+module.exports.unassignEmployeeFromDepartment = unassignEmployeeFromDepartment;
 },{"./Helper.js":38,"./Security.js":39,"axios":5}]},{},[37]);

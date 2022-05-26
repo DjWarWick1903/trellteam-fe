@@ -36,6 +36,21 @@ async function redirectToLogin(tokens) {
     }
 }
 
+function intersect(a, b) {
+    const setA = new Set(a);
+    const setB = new Set(b);
+    const intersection = new Set([...setA]).filter(x => setB.has(x));
+    return Array.from(intersection);
+}
+
+function difference(a, b) {
+    const setA = new Set(a);
+    const setB = new Set(b);
+    const difference = new Set([...setA]).filter(x => !setB.has(x));
+}
+
 module.exports.redirectToLogin = redirectToLogin;
 module.exports.showAlert = showAlert;
 module.exports.verifyInputIsEmpty = verifyInputIsEmpty;
+module.exports.intersect = intersect;
+module.exports.difference = difference;

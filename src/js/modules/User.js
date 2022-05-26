@@ -238,8 +238,104 @@ async function getAccountDetails(username, tokens) {
     }
 }
 
+async function assignEmployeeToDepartment(idOrg, idEmp, depName, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/user/main/organisation/department/employee/assign`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        };
+        const data = {
+            idOrg,
+            idEmp,
+            depName
+        }
+        let response;
+
+        try {
+            await axios
+                .post(url, data, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    response = {
+                        status: resp.status,
+                        department: resp.data.department
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function unassignEmployeeFromDepartment(idOrg, idEmp, depName, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/user/main/organisation/department/employee/unassign`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        };
+        const data = {
+            idOrg,
+            idEmp,
+            depName
+        }
+        let response;
+
+        try {
+            await axios
+                .post(url, data, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    response = {
+                        status: resp.status,
+                        department: resp.data.department
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
+
+        return response;
+    }
+}
+
 module.exports.getOrganisation = getOrganisation;
 module.exports.getOrganisationEmployees = getOrganisationEmployees;
 module.exports.createDepartment = createDepartment;
 module.exports.createEmployee = createEmployee;
 module.exports.getAccountDetails = getAccountDetails;
+module.exports.assignEmployeeToDepartment = assignEmployeeToDepartment;
+module.exports.unassignEmployeeFromDepartment = unassignEmployeeFromDepartment;

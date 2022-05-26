@@ -55,6 +55,43 @@
 
                                 </tbody>
                             </table>
+                            <div id="addEmployee">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text text-white span" id="basic-addon3">Employee</span>
+                                    <select class="form-select form-control" aria-describedby="basic-addon3" aria-label="Default select example" id="employeeList">
+                                        <!-- Organisation employees -->
+                                    </select>
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-md-3 mx-auto">
+                                        <input class="btn btn-secondary btn-lg" type="button" value="Clear" id="Clear">
+                                        <input class="btn btn-primary btn-lg" type="button" value="Assign" id="Assign">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div><br>
+            <div class="row">
+                <div class="col-12 justify-content-center d-flex">
+                    <div class="card">
+                        <div class="card-header text-white">Unassign employee</div>
+                        <div class="card-body">
+                            <div id="addEmployee">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text text-white span" id="basic-addon3">Employee</span>
+                                    <select class="form-select form-control" aria-describedby="basic-addon3" aria-label="Default select example" id="employeeListDel">
+                                        <!-- Organisation employees -->
+                                    </select>
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-md-3 mx-auto">
+                                        <input class="btn btn-secondary btn-lg" type="button" value="Clear" id="Clear2">
+                                        <input class="btn btn-primary btn-lg" type="button" value="Unassign" id="Unassign">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -64,20 +101,67 @@
         <script>
             const username = window.sessionStorage.getItem('username');
             if(username == null) window.location.replace("Login.html");
+            const idOrg = window.sessionStorage.getItem('orgId');
             const tokens = {
                 accessToken: window.sessionStorage.getItem('accessToken'),
                 refreshToken: window.sessionStorage.getItem('refreshToken')
             }
+            const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
 
             const urlParams = new URLSearchParams(window.location.search);
-
+            let departmentName = null;
             if(urlParams.has('department')) {
-                const departmentName = urlParams.get('department');
+                departmentName = urlParams.get('department');
                 window.fillDepartmentEmployees(username, departmentName, tokens);
+                window.fillOrganisationEmployees(idOrg, username, departmentName, tokens);
             } else {
-                const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
-                helperModule.showAlert("Department name not found.", 'danger', alertPlaceholder);
+                window.showAlert("Department name not found.", 'danger', alertPlaceholder);
             }
+
+            if(urlParams.has('assigned')) {
+                const idEmp = urlParams.get('assigned');
+                window.showAlert(`Employee ${idEmp} has been assigned to the department.`, 'success', alertPlaceholder);
+            }
+
+            if(urlParams.has('unassigned')) {
+                const idEmp = urlParams.get('unassigned');
+                window.showAlert(`Employee ${idEmp} has been unassigned from the department.`, 'success', alertPlaceholder);
+            }
+
+            document.getElementById('Clear').addEventListener('click', function() {
+                const empSelect = document.getElementById('employeeList');
+                empSelect.options[0].selected = 'selected';
+            });
+
+            document.getElementById('Clear2').addEventListener('click', function() {
+                const empSelect = document.getElementById('employeeListDel');
+                empSelect.options[0].selected = 'selected';
+            });
+
+            document.getElementById('Unassign').addEventListener('click', async function() {
+                const empSelect = document.getElementById('employeeListDel');
+                const idEmp = empSelect[empSelect.selectedIndex].id;
+
+                console.log(idEmp);
+                if(departmentName != null) {
+                    const response = window.unassignEmployee(idOrg, idEmp, departmentName, tokens);
+                    if(response) {
+                        window.location.replace(`DepartmentEmployees.html?department=${departmentName}&unassigned=${idEmp}`);
+                    }
+                }
+            });
+
+            document.getElementById('Assign').addEventListener('click', async function() {
+                const empSelect = document.getElementById('employeeList');
+                const idEmp = empSelect[empSelect.selectedIndex].id;
+
+                if(departmentName != null) {
+                    const response = window.assignEmployee(idOrg, idEmp, departmentName, tokens);
+                    if(response) {
+                        window.location.replace(`DepartmentEmployees.html?department=${departmentName}&assigned=${idEmp}`);
+                    }
+                }
+            });
         </script>
 
         <script src="/node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>
