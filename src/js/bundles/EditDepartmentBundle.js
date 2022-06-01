@@ -4387,80 +4387,59 @@ process.umask = function() { return 0; };
 },{}],37:[function(require,module,exports){
 (function (global){(function (){
 const userModule = require('./modules/User.js');
-const helperModule = require("./modules/Helper");
+const helperModule = require('./modules/Helper.js');
 
-async function getMainPageDetails(username, tokens) {
-    let response;
-    console.log(username);
-    console.log(tokens);
-    if(username != null) {
-        response = await userModule.getOrganisation(username, tokens);
-    } else {
-        global.window.location.replace("Login.html");
-    }
+function showAlert(text, type, placeholder) {
+    helperModule.showAlert(text, type, placeholder);
+}
 
-    if(response.status == 200) {
-        global.window.sessionStorage.setItem('orgId', response.organisation.id);
-        let depsCard = '';
-        const departments = response.departments;
-        let number = 0;
-        for(const department of departments) {
-            const depCard = `
-                <div class="col-6">
-                    <div class="card">
-                        <div class="card-header text-white">${department.name}</div>
-                        <div class="card-body">
-                            <form action="DepartmentEmployees.html" method="get" class="container-fluid justify-content-center">
-                                <input type="hidden" name="department" value="${department.name}">
-                                <div class="mx-auto col-4">
-                                    <input class="btn btn-primary btn-lg" type="submit" value="Employees">
-                                </div>
-                            </form><br>
-                            <form action="Board.html" method="get" class="container-fluid justify-content-center">
-                                <input type="hidden" name="department" value="${department.name}">
-                                <div class="col-4 mx-auto">
-                                    <input class="btn btn-primary btn-lg" type="submit" value="Boards">
-                                </div>
-                            </form><br>
-                            <form action="EditDepartment.html" method="get" class="container-fluid justify-content-center">
-                                <input type="hidden" name="department" value="${department.name}">
-                                <input type="hidden" name="id" value="${department.id}">
-                                <div class="col-4 mx-auto">
-                                    <input class="btn btn-primary btn-lg" type="submit" value="Edit">
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            `;
-            depsCard = depsCard.concat(depCard);
-            number += 1;
-            if(number == 2) {
-                number = 0;
+async function fillDepartmentData(idDep, idOrg, tokens) {
+    const responseDep = await userModule.getDepartmentById(idDep, tokens);
+    const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
+
+    if(responseDep.status == 200) {
+        const responseEmp = await userModule.getOrganisationEmployees(idOrg, tokens);
+        if(responseEmp.status == 200) {
+            const departmentNameField = document.getElementById('floatingInputGrid');
+            departmentNameField.value = responseDep.name;
+
+            const employeesSelect = document.getElementById('floatingSelectGrid');
+            const employees = responseEmp.employees;
+
+            let employeesHTML = `<option value="undefined" id="0" ${responseDep.manager == null ? 'selected' : ''}>Undefined</option>`;
+            const managerName = responseDep.manager != null ? `${responseDep.manager.firstName} ${responseDep.manager.lastName}` : null;
+            for(const employee of employees) {
+                const name = `${employee.firstName} ${employee.lastName}`;
+                const employeeHTML = `<option value="${name}" id="${employee.id}" ${responseDep.manager != null && managerName == name ? 'selected' : ''}>${name}</option>`;
+                employeesHTML = employeesHTML.concat(employeeHTML);
             }
+
+            employeesSelect.innerHTML = employeesHTML;
+            return responseDep.name;
+        } else {
+            helperModule.showAlert('Employees could not be fetched because of a server problem.', 'danger', alertPlaceholder);
         }
-
-        const orgCard = `
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header text-white">${response.organisation.name}</div>
-                <div class="card-body">
-                    ${depsCard}
-                </div>
-            </div>
-        </div>
-        `;
-
-        const replacement = document.getElementById('boards');
-        replacement.innerHTML = orgCard;
     } else {
-        helperModule.showAlert('Organisation data could not be fetched because of a server problem.', 'danger', alertPlaceholder);
+        helperModule.showAlert('Department could not be fetched because of a server problem.', 'danger', alertPlaceholder);
     }
 }
 
-global.window.getMainPageDetails = getMainPageDetails;
+async function editDepartment(department, tokens) {
+    const response = await userModule.editDepartment(department, tokens);
+    const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
+
+    if(response.status == 200) {
+        helperModule.showAlert('Department has been updated successfully.', 'success', alertPlaceholder);
+    } else {
+        helperModule.showAlert('Department could not be updated because of a server problem.', 'danger', alertPlaceholder);
+    }
+}
+
+global.window.fillDepartmentData = fillDepartmentData;
+global.window.showAlert = showAlert;
+global.window.editDepartment = editDepartment;
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./modules/Helper":38,"./modules/User.js":40}],38:[function(require,module,exports){
+},{"./modules/Helper.js":38,"./modules/User.js":40}],38:[function(require,module,exports){
 (function (global){(function (){
 const securityModule = require("./Security");
 

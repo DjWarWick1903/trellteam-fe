@@ -3,6 +3,8 @@ const helperModule = require("./modules/Helper");
 
 async function getMainPageDetails(username, tokens) {
     let response;
+    console.log(username);
+    console.log(tokens);
     if(username != null) {
         response = await userModule.getOrganisation(username, tokens);
     } else {
@@ -20,16 +22,23 @@ async function getMainPageDetails(username, tokens) {
                     <div class="card">
                         <div class="card-header text-white">${department.name}</div>
                         <div class="card-body">
-                            <form action="DepartmentEmployees.html?department=${department.name}" method="get" class="container-fluid justify-content-center">
+                            <form action="DepartmentEmployees.html" method="get" class="container-fluid justify-content-center">
                                 <input type="hidden" name="department" value="${department.name}">
                                 <div class="mx-auto col-4">
                                     <input class="btn btn-primary btn-lg" type="submit" value="Employees">
                                 </div>
                             </form><br>
-                            <form action="Board.html?department=${department.name}" method="get" class="container-fluid justify-content-center">
+                            <form action="Board.html" method="get" class="container-fluid justify-content-center">
                                 <input type="hidden" name="department" value="${department.name}">
                                 <div class="col-4 mx-auto">
                                     <input class="btn btn-primary btn-lg" type="submit" value="Boards">
+                                </div>
+                            </form><br>
+                            <form action="EditDepartment.html" method="get" class="container-fluid justify-content-center">
+                                <input type="hidden" name="department" value="${department.name}">
+                                <input type="hidden" name="id" value="${department.id}">
+                                <div class="col-4 mx-auto">
+                                    <input class="btn btn-primary btn-lg" type="submit" value="Edit">
                                 </div>
                             </form>
                         </div>

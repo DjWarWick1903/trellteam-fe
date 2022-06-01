@@ -76,7 +76,7 @@ async function getOrganisationEmployees(idOrg, tokens) {
 
                     response = {
                         status: resp.status,
-                        employees
+                        employees: resp.data
                     }
                 })
                 .catch(function (err) {
@@ -332,6 +332,97 @@ async function unassignEmployeeFromDepartment(idOrg, idEmp, depName, tokens) {
     }
 }
 
+async function getDepartmentById(idDep, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/user/main/organisation/department/${idDep}`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        };
+        let response;
+
+        try {
+            await axios
+                .get(url, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    response = {
+                        status: resp.status,
+                        id: resp.data.id,
+                        name: resp.data.name,
+                        manager: resp.data.manager,
+                        employees: resp.data.employees
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function editDepartment(department, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/user/main/organisation/department`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        };
+        const data = {
+            idDep: department.id,
+            depName: department.name,
+            idMan: department.idMan == null ? null : department.idMan
+        };
+        let response;
+
+        try {
+            await axios
+                .put(url, data, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    response = {
+                        status: resp.status
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
+
+        return response;
+    }
+}
+
 module.exports.getOrganisation = getOrganisation;
 module.exports.getOrganisationEmployees = getOrganisationEmployees;
 module.exports.createDepartment = createDepartment;
@@ -339,3 +430,5 @@ module.exports.createEmployee = createEmployee;
 module.exports.getAccountDetails = getAccountDetails;
 module.exports.assignEmployeeToDepartment = assignEmployeeToDepartment;
 module.exports.unassignEmployeeFromDepartment = unassignEmployeeFromDepartment;
+module.exports.getDepartmentById = getDepartmentById;
+module.exports.editDepartment = editDepartment;
