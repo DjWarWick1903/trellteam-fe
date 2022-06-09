@@ -42,16 +42,7 @@
             </div>
         </div>
 
-        <script>
-            const username = window.sessionStorage.getItem('username');
-            if(username == null) window.location.replace("Login.html");
-            const tokens = {
-                accessToken: window.sessionStorage.getItem('accessToken'),
-                refreshToken: window.sessionStorage.getItem('refreshToken')
-            }
-            window.getAccountDetails(username, tokens);
-        </script>
-
+        <script src="/src/js/page_scripts/AccountDetails.js" type="text/javascript"></script>
         <script src="/node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>
     </body>
 </html>

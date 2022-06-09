@@ -1,7 +1,3 @@
-// Javascript script which will be bundled and used inside the Welcome.html page.
-
-const helperModule = require("./modules/Helper");
-
 function toLogin() {
     document.choice_form.action = "Login.html";
     document.choice_form.method = "post";

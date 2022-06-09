@@ -1,8 +1,9 @@
-const userModule = require('./modules/User.js');
-const helperModule = require('./modules/Helper.js');
+const helperModule = require('../modules/Helper.js');
+const employeeDB = require('../modules/EmployeeDB.js');
+const departmentDB = require('../modules/DepartmentDB.js');
 
 async function fillEmployeesSelect(idOrg, tokens) {
-    const response = await userModule.getOrganisationEmployees(idOrg, tokens);
+    const response = await employeeDB.getOrganisationEmployees(idOrg, tokens);
     const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
 
     if(response.status == 200) {
@@ -28,7 +29,7 @@ async function createDepartment(idOrg, departmentName, idMan, tokens) {
         helperModule.showAlert('Please specify the name of the new department.', 'info', alertPlaceholder);
     }
 
-    const response = await userModule.createDepartment(idOrg, departmentName, idMan, tokens);
+    const response = await departmentDB.createDepartment(idOrg, departmentName, idMan, tokens);
 
     if(response.status == 201) {
         helperModule.showAlert('Department has been created succesfully!', 'success', alertPlaceholder);

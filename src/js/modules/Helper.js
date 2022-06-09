@@ -1,4 +1,4 @@
-const securityModule = require("./Security");
+const securityModule = require("./SecurityDB");
 
 function showAlert(message, type, alertPlaceholder) {
     const alertHTML = `
@@ -49,8 +49,35 @@ function difference(a, b) {
     const difference = new Set([...setA]).filter(x => !setB.has(x));
 }
 
+function employeesUnion(orgEmployees, depEmployees) {
+    let employees = orgEmployees.filter(employee => !depEmployees.includes(employee));
+
+    return [...employees, ...depEmployees];
+}
+
+function employeeDifference(orgEmployees, depEmployees) {
+    let employees = [];
+    for(const orgEmp of orgEmployees) {
+        let isAssigned = false;
+        for(const depEmp of depEmployees) {
+            if(depEmp.id == orgEmp.id) {
+                isAssigned = true;
+                break;
+            }
+        }
+
+        if(isAssigned == false) {
+            employees = employees.concat(orgEmp);
+        }
+    }
+
+    return employees;
+}
+
 module.exports.redirectToLogin = redirectToLogin;
 module.exports.showAlert = showAlert;
 module.exports.verifyInputIsEmpty = verifyInputIsEmpty;
 module.exports.intersect = intersect;
 module.exports.difference = difference;
+module.exports.employeesUnion = employeesUnion;
+module.exports.employeeDifference = employeeDifference;

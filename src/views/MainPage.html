@@ -27,6 +27,7 @@
                             <a class="nav-link" href="NewDepartment.html">Add Department</a>
                             <a class="nav-link" href="NewEmployee.html">Add Employee</a>
                             <a class="nav-link" href="AccountDetails.html">Account details</a>
+                            <a class="nav-link" href="NewType.html">Create type</a>
                             <a class="nav-link" href="Login.html">Logout</a>
                         </div>
                     </div>
@@ -40,16 +41,7 @@
             </div>
         </div>
 
-        <script>
-            const username = window.sessionStorage.getItem('username');
-            if(username == null) window.location.replace("Login.html");
-            const tokens = {
-                accessToken: window.sessionStorage.getItem('accessToken'),
-                refreshToken: window.sessionStorage.getItem('refreshToken')
-            }
-            window.getMainPageDetails(username, tokens);
-        </script>
-
+        <script src="/src/js/page_scripts/MainPage.js" type="text/javascript"></script>
         <script src="/node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>
     </body>
 </html>

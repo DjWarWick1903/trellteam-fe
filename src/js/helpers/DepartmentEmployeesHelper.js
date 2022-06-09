@@ -1,12 +1,12 @@
-const userModule = require('./modules/User.js');
-const helperModule = require("./modules/Helper");
+const helperModule = require("../modules/Helper.js");
+const organisationDB = require('../modules/OrganisationDB.js');
+const employeeDB = require('../modules/EmployeeDB.js');
 
 async function fillDepartmentEmployees(username, depName, tokens) {
-    const response = await userModule.getOrganisation(username, tokens);
+    const response = await organisationDB.getOrganisationByUsername(username, tokens);
     const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
 
     if(response.status == 200) {
-        const idOrg = response.organisation.id;
         const departments = response.departments;
         let employees = null;
         for(const department of departments) {
@@ -48,34 +48,9 @@ async function fillDepartmentEmployees(username, depName, tokens) {
     }
 }
 
-function employeeDifference(orgEmployees, depEmployees) {
-    let employees = [];
-    for(const orgEmp of orgEmployees) {
-        let isAssigned = false;
-        for(const depEmp of depEmployees) {
-            if(depEmp.id == orgEmp.id) {
-                isAssigned = true;
-                break;
-            }
-        }
-
-        if(isAssigned == false) {
-            employees = employees.concat(orgEmp);
-        }
-    }
-
-    return employees;
-}
-
-function employeesUnion(orgEmployees, depEmployees) {
-    let employees = orgEmployees.filter(employee => !depEmployees.includes(employee));
-
-    return [...employees, ...depEmployees];
-}
-
 async function fillOrganisationEmployees(idOrg, username, depName, tokens) {
-    const responseOrg = await userModule.getOrganisationEmployees(idOrg, tokens);
-    const responseDep = await userModule.getOrganisation(username, tokens);
+    const responseOrg = await employeeDB.getOrganisationEmployees(idOrg, tokens);
+    const responseDep = await organisationDB.getOrganisationByUsername(username, tokens);
     const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
 
     if(responseOrg.status == 200 && responseDep.status == 200) {
@@ -86,12 +61,11 @@ async function fillOrganisationEmployees(idOrg, username, depName, tokens) {
         for(const department of departments) {
             if(department.name == depName) {
                 depEmployees = department.employees;
-                console.log(depEmployees);
                 break;
             }
         }
 
-        const employees = employeeDifference(orgEmployees, depEmployees);
+        const employees = helperModule.employeeDifference(orgEmployees, depEmployees);
         let employeesHTML = `<option value="undefined" id="0" selected>Undefined</option>`;
         if(Array.isArray(employees)) {
             for (const employee of employees) {
@@ -125,7 +99,7 @@ async function assignEmployee(idOrg, idEmp, depName, tokens) {
         return false;
     }
 
-    const response = await userModule.assignEmployeeToDepartment(idOrg, idEmp, depName, tokens);
+    const response = await employeeDB.assignEmployeeToDepartment(idOrg, idEmp, depName, tokens);
 
     if(response.status == 200) {
         return true;
@@ -142,7 +116,7 @@ async function unassignEmployee(idOrg, idEmp, depName, tokens) {
         return false;
     }
 
-    const response = await userModule.unassignEmployeeFromDepartment(idOrg, idEmp, depName, tokens);
+    const response = await employeeDB.unassignEmployeeFromDepartment(idOrg, idEmp, depName, tokens);
 
     if(response.status == 200) {
         return true;

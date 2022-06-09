@@ -1,16 +1,17 @@
-const userModule = require('./modules/User.js');
-const helperModule = require('./modules/Helper.js');
+const helperModule = require('../modules/Helper.js');
+const departmentDB = require('../modules/DepartmentDB.js');
+const employeeDB = require('../modules/EmployeeDB.js');
 
 function showAlert(text, type, placeholder) {
     helperModule.showAlert(text, type, placeholder);
 }
 
 async function fillDepartmentData(idDep, idOrg, tokens) {
-    const responseDep = await userModule.getDepartmentById(idDep, tokens);
+    const responseDep = await departmentDB.getDepartmentById(idDep, tokens);
     const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
 
     if(responseDep.status == 200) {
-        const responseEmp = await userModule.getOrganisationEmployees(idOrg, tokens);
+        const responseEmp = await employeeDB.getOrganisationEmployees(idOrg, tokens);
         if(responseEmp.status == 200) {
             const departmentNameField = document.getElementById('floatingInputGrid');
             departmentNameField.value = responseDep.name;
@@ -37,7 +38,7 @@ async function fillDepartmentData(idDep, idOrg, tokens) {
 }
 
 async function editDepartment(department, tokens) {
-    const response = await userModule.editDepartment(department, tokens);
+    const response = await departmentDB.editDepartment(department, tokens);
     const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
 
     if(response.status == 200) {

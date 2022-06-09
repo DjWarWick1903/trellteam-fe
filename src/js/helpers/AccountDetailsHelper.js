@@ -1,8 +1,8 @@
-const userModule = require('./modules/User.js');
-const helperModule = require("./modules/Helper");
+const helperModule = require("../modules/Helper.js");
+const userDB = require('../modules/UserDB.js');
 
 async function getAccountDetails(username, tokens) {
-    const response = await userModule.getAccountDetails(username, tokens);
+    const response = await userDB.getAccountDetails(username, tokens);
     const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
 
     if(response.status == 200) {

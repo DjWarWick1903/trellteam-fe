@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>TrellTeam - Login</title>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.css">
+        <link rel="stylesheet" href="/src/css/NewBoard.css">
+        <script src="/src/js/bundles/NewBoardBundle.js"></script>
+    </head>
+
+    <body>
+        <div class="container mx-auto">
+            <h1 class="display-1"><strong>Trell Team</strong></h1>
+            <hr>
+
+            <!-- Navbar -->
+            <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+                <div class="container-fluid">
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+                        <ul class="nav navbar-nav me-auto">
+                            <li><a class="nav-link" aria-current="page" href="MainPage.html">Home</a></li>
+                            <li><a class="nav-link" href="Organisation.html">Organisation</a></li>
+                            <li><a class="nav-link" href="NewDepartment.html">Add Department</a></li>
+                            <li><a class="nav-link" href="NewEmployee.html">Add Employee</a></li>
+                            <li><a class="nav-link" href="AccountDetails.html">Account details</a></li>
+                            <li><a class="nav-link" href="Login.html">Logout</a></li>
+                        </ul>
+                        <ul class="nav navbar-nav navbar-right" id="BoardsLinks">
+
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+            <div class="announcer justify-content-center d-flex" id="errorAlertPlaceholder"></div><br>
+
+            <!-- New board form -->
+            <form id="NewBoardForm">
+                <div class="row">
+                    <div class="col-12 justify-content-center d-flex">
+                        <div class="card">
+                            <div class="card-header text-white">New board</div>
+                            <div class="card-body">
+                                <div class="row g-2">
+                                    <div class="col-md">
+                                        <div class="form-floating">
+                                            <input type="text" class="form-control" id="boardTitle">
+                                            <label for="boardTitle">Board title</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-md">
+                                        <div class="form-floating">
+                                            <input type="text" class="form-control" id="version">
+                                            <label for="version">Version</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-md">
+                                        <div class="form-floating">
+                                            <input type="date" class="form-control" id="release">
+                                            <label for="release">Release</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-4 mx-auto">
+                                <input class="btn btn-secondary btn-lg" type="button" value="Clear" id="Clear">
+                                <input class="btn btn-primary btn-lg" type="button" value="Create" id="Create">
+                            </div><br>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <script src="/src/js/page_scripts/NewBoard.js" type="text/javascript"></script>
+        <script src="/node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>
+    </body>
+</html>

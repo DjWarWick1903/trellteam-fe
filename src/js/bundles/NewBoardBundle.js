@@ -4386,56 +4386,160 @@ process.umask = function() { return 0; };
 
 },{}],37:[function(require,module,exports){
 (function (global){(function (){
-const helperModule = require('../modules/Helper.js');
-const securityDB = require('../modules/SecurityDB.js');
+const helperModule = require("../modules/Helper.js");
+const boardDB = require('../modules/BoardDB.js');
 
-async function executeLogin(username, password) {
-    const response = await securityDB.requestLogin(username, password);
-
-    if(response.status == 200) {
-        global.window.sessionStorage.setItem('accessToken', response.accessToken);
-        global.window.sessionStorage.setItem('refreshToken', response.refreshToken);
-        global.window.sessionStorage.setItem('roles', response.roles);
-        global.window.sessionStorage.setItem('username', username);
-    } else {
-        const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
-        helperModule.showAlert("There was an error logging in. Please try again.", 'danger', alertPlaceholder);
-    }
-
-    return response.status;
-}
-
-function verifyCredentials(username, password) {
+function verifyInput() {
     const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
+    const titleInput = document.getElementById('boardTitle');
+    const versionInput = document.getElementById('version');
+    const releaseInput = document.getElementById('release');
 
-    if(helperModule.verifyInputIsEmpty(username)) {
-        helperModule.showAlert("Please insert a valid username.", 'info', alertPlaceholder);
+    if(helperModule.verifyInputIsEmpty(titleInput.value)) {
+        helperModule.showAlert('Please specify the title of the board.', 'info', alertPlaceholder);
         return false;
     }
 
-    if(helperModule.verifyInputIsEmpty(password)) {
-        helperModule.showAlert("Please insert a valid password.", 'info', alertPlaceholder);
+    if(helperModule.verifyInputIsEmpty(versionInput.value)) {
+        helperModule.showAlert('Please specify the version of the board.', 'info', alertPlaceholder);
+        return false;
+    }
+
+    if(helperModule.verifyInputIsEmpty(releaseInput.value)) {
+        helperModule.showAlert('Please specify the release date of the board.', 'info', alertPlaceholder);
         return false;
     }
 
     return true;
 }
 
-function isRegistered() {
-    const queryString = global.window.location.search;
-    const urlParams = new URLSearchParams(queryString);
+async function createBoard(board, tokens) {
+    const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
+    if(verifyInput()) {
+        const response = await boardDB.createBoard(board, tokens);
 
-    if(urlParams.has('registered')) {
-        const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
-        helperModule.showAlert("Your organisation has been registered. Please log in.", 'success', alertPlaceholder);
+        if(response.status == 201) {
+            helperModule.showAlert('Board has been created succesfully!', 'success', alertPlaceholder);
+        } else {
+            helperModule.showAlert('Board could not be created because of a server problem.', 'danger', alertPlaceholder);
+        }
     }
 }
 
-global.window.verifyCredentials = verifyCredentials;
-global.window.executeLogin = executeLogin;
-global.window.isRegistered = isRegistered;
+function createLinks(idDep) {
+    const boardsLinks = document.getElementById('BoardsLinks');
+    const newBoardHtml = `
+        <li><a id="Board" class="nav-link active" href="NewBoard.html?id=${idDep}">Create board</a></li>
+    `;
+    const newTicketHtml = `
+        <li><a id="Ticket" class="nav-link" href="NewTicket.html?id=${idDep}">Create ticket</a></li>
+    `;
+
+    boardsLinks.innerHTML = `
+        ${newBoardHtml}
+        ${newTicketHtml}
+    `;
+}
+
+global.window.createBoard = createBoard;
+global.window.createLinks = createLinks;
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../modules/Helper.js":38,"../modules/SecurityDB.js":39}],38:[function(require,module,exports){
+},{"../modules/BoardDB.js":38,"../modules/Helper.js":39}],38:[function(require,module,exports){
+const helperModule = require("./Helper");
+const axios = require("axios");
+
+async function createBoard(board, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/board/main`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        };
+        let response;
+
+        try {
+            await axios
+                .post(url, board, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    response = {
+                        status: resp.status,
+                        id: resp.data.id,
+                        title: resp.data.title,
+                        dateCreated: resp.data.dateCreated,
+                        idDep: resp.data.idDepartment,
+                        version: resp.data.version,
+                        release: resp.data.release
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function getDepartmentBoards(idDep, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/board/department/${idDep}`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        };
+        let response;
+
+        try {
+            await axios
+                .get(url, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    response = {
+                        status: resp.status,
+                        boards: resp.data
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
+
+        return response;
+    }
+}
+
+module.exports.createBoard = createBoard;
+module.exports.getDepartmentBoards = getDepartmentBoards;
+},{"./Helper":39,"axios":1}],39:[function(require,module,exports){
 (function (global){(function (){
 const securityModule = require("./SecurityDB");
 
@@ -4521,7 +4625,7 @@ module.exports.difference = difference;
 module.exports.employeesUnion = employeesUnion;
 module.exports.employeeDifference = employeeDifference;
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./SecurityDB":39}],39:[function(require,module,exports){
+},{"./SecurityDB":40}],40:[function(require,module,exports){
 const axios = require("axios");
 const helperModule = require("./Helper");
 
@@ -4691,4 +4795,4 @@ module.exports.requestLogin = requestLogin;
 module.exports.requestTokenRefresh = requestTokenRefresh;
 module.exports.ping = ping;
 module.exports.getRoles = getRoles;
-},{"./Helper":38,"axios":1}]},{},[37]);
+},{"./Helper":39,"axios":1}]},{},[37]);

@@ -4386,20 +4386,19 @@ process.umask = function() { return 0; };
 
 },{}],37:[function(require,module,exports){
 (function (global){(function (){
-const userModule = require('./modules/User.js');
-const helperModule = require("./modules/Helper");
+const helperModule = require("../modules/Helper");
+const organisationDB = require('../modules/OrganisationDB.js');
 
 async function getMainPageDetails(username, tokens) {
     let response;
-    console.log(username);
-    console.log(tokens);
+
     if(username != null) {
-        response = await userModule.getOrganisation(username, tokens);
+        response = await organisationDB.getOrganisationByUsername(username, tokens);
     } else {
         global.window.location.replace("Login.html");
     }
 
-    if(response.status == 200) {
+    if(response != null && response.status == 200) {
         global.window.sessionStorage.setItem('orgId', response.organisation.id);
         let depsCard = '';
         const departments = response.departments;
@@ -4418,6 +4417,7 @@ async function getMainPageDetails(username, tokens) {
                             </form><br>
                             <form action="Board.html" method="get" class="container-fluid justify-content-center">
                                 <input type="hidden" name="department" value="${department.name}">
+                                <input type="hidden" name="id" value="${department.id}">
                                 <div class="col-4 mx-auto">
                                     <input class="btn btn-primary btn-lg" type="submit" value="Boards">
                                 </div>
@@ -4460,9 +4460,9 @@ async function getMainPageDetails(username, tokens) {
 
 global.window.getMainPageDetails = getMainPageDetails;
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./modules/Helper":38,"./modules/User.js":40}],38:[function(require,module,exports){
+},{"../modules/Helper":38,"../modules/OrganisationDB.js":39}],38:[function(require,module,exports){
 (function (global){(function (){
-const securityModule = require("./Security");
+const securityModule = require("./SecurityDB");
 
 function showAlert(message, type, alertPlaceholder) {
     const alertHTML = `
@@ -4513,18 +4513,45 @@ function difference(a, b) {
     const difference = new Set([...setA]).filter(x => !setB.has(x));
 }
 
+function employeesUnion(orgEmployees, depEmployees) {
+    let employees = orgEmployees.filter(employee => !depEmployees.includes(employee));
+
+    return [...employees, ...depEmployees];
+}
+
+function employeeDifference(orgEmployees, depEmployees) {
+    let employees = [];
+    for(const orgEmp of orgEmployees) {
+        let isAssigned = false;
+        for(const depEmp of depEmployees) {
+            if(depEmp.id == orgEmp.id) {
+                isAssigned = true;
+                break;
+            }
+        }
+
+        if(isAssigned == false) {
+            employees = employees.concat(orgEmp);
+        }
+    }
+
+    return employees;
+}
+
 module.exports.redirectToLogin = redirectToLogin;
 module.exports.showAlert = showAlert;
 module.exports.verifyInputIsEmpty = verifyInputIsEmpty;
 module.exports.intersect = intersect;
 module.exports.difference = difference;
+module.exports.employeesUnion = employeesUnion;
+module.exports.employeeDifference = employeeDifference;
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./Security":39}],39:[function(require,module,exports){
+},{"./SecurityDB":40}],39:[function(require,module,exports){
 const axios = require("axios");
-const helperModule = require("./Helper");
+const helperModule = require("./Helper.js");
 
-async function requestRegister(registerData) {
-    const url = 'http://localhost:8080/security/organisation/register';
+async function registerOrganisation(registerData) {
+    const url = 'http://localhost:8080/organisation/main';
     let response;
 
     try {
@@ -4553,6 +4580,65 @@ async function requestRegister(registerData) {
 
     return response;
 }
+
+async function getOrganisationByUsername(username, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/organisation/main/${username}`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        }
+        let response;
+
+        try {
+            await axios
+                .get(url, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    const organisation = {
+                        id: resp.data.id,
+                        name: resp.data.name,
+                        sign: resp.data.sign,
+                        dateCreated: resp.data.dateCreated,
+                        domain: resp.data.domain,
+                        cui: resp.data.cui
+                    };
+                    const departments = resp.data.departments;
+
+                    response = {
+                        status: resp.status,
+                        organisation,
+                        departments
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch(err) {
+            response = {
+                status: 404,
+                message: err.message,
+                serverMessage: 'Server could not be reached'
+            }
+        }
+
+        return response;
+    }
+}
+
+module.exports.registerOrganisation = registerOrganisation;
+module.exports.getOrganisationByUsername = getOrganisationByUsername;
+},{"./Helper.js":38,"axios":1}],40:[function(require,module,exports){
+const axios = require("axios");
+const helperModule = require("./Helper");
 
 async function requestLogin(user, pass) {
     const data = {
@@ -4717,443 +4803,7 @@ async function getRoles(tokens) {
 }
 
 module.exports.requestLogin = requestLogin;
-module.exports.requestRegister = requestRegister;
 module.exports.requestTokenRefresh = requestTokenRefresh;
 module.exports.ping = ping;
 module.exports.getRoles = getRoles;
-},{"./Helper":38,"axios":1}],40:[function(require,module,exports){
-const axios = require("axios");
-const securityModule = require("./Security.js");
-const helperModule = require('./Helper.js');
-
-async function getOrganisation(username, tokens) {
-    tokens = await helperModule.redirectToLogin(tokens);
-
-    if(tokens != false) {
-        const url = `http://localhost:8080/user/main/organisation/${username}`;
-        const config = {
-            headers: {
-                'Authorization': `Token: ${tokens.accessToken}`
-            }
-        }
-        let response;
-
-        try {
-            await axios
-                .get(url, config)
-                .then(function (resp) {
-                    console.log(resp);
-                    const organisation = {
-                        id: resp.data.id,
-                        name: resp.data.name,
-                        sign: resp.data.sign,
-                        dateCreated: resp.data.dateCreated,
-                        domain: resp.data.domain,
-                        cui: resp.data.cui
-                    };
-                    const departments = resp.data.departments;
-
-                    response = {
-                        status: resp.status,
-                        organisation,
-                        departments
-                    }
-                })
-                .catch(function (err) {
-                    console.log(err);
-                    response = {
-                        status: err.response.status,
-                        message: err.message,
-                        serverMessage: err.response.data.error_message
-                    }
-                });
-        } catch(err) {
-            response = {
-                status: 404,
-                message: err.message,
-                serverMessage: 'Server could not be reached'
-            }
-        }
-
-        return response;
-    }
-}
-
-async function getOrganisationEmployees(idOrg, tokens) {
-    tokens = await helperModule.redirectToLogin(tokens);
-
-    if(tokens != false) {
-        const url = `http://localhost:8080/user/main/organisation/employees/${idOrg}`;
-        const config = {
-            headers: {
-                'Authorization': `Token: ${tokens.accessToken}`
-            }
-        }
-        let response;
-
-        try {
-            await axios
-                .get(url, config)
-                .then(function (resp) {
-                    console.log(resp);
-                    const employees = resp.data;
-
-                    response = {
-                        status: resp.status,
-                        employees: resp.data
-                    }
-                })
-                .catch(function (err) {
-                    console.log(err);
-                    response = {
-                        status: err.response.status,
-                        message: err.message,
-                        serverMessage: err.response.data.error_message
-                    }
-                });
-        } catch (err) {
-            response = {
-                status: 900,
-                message: err.message,
-                serverMessage: 'Internal error.'
-            }
-        }
-
-        return response;
-    }
-}
-
-async function createDepartment(idOrganisation, departmentName, idManager, tokens) {
-    tokens = await helperModule.redirectToLogin(tokens);
-
-    if(tokens != false) {
-        const url = `http://localhost:8080/user/main/organisation/department`;
-        const data = {
-            depName: departmentName,
-            idOrg: idOrganisation,
-            idMan: idManager
-        };
-        const config = {
-            headers: {
-                'Authorization': `Token: ${tokens.accessToken}`
-            }
-        };
-        let response;
-
-        try {
-            await axios
-                .post(url, data, config)
-                .then(function (resp) {
-                    console.log(resp);
-                    response = {
-                        status: resp.status,
-                        department: resp.data.department
-                    }
-                })
-                .catch(function (err) {
-                    console.log(err);
-                    response = {
-                        status: err.response.status,
-                        message: err.message,
-                        serverMessage: err.response.data.error_message
-                    }
-                });
-        } catch (err) {
-            response = {
-                status: 900,
-                message: err.message,
-                serverMessage: 'Internal error.'
-            }
-        }
-
-        return response;
-    }
-}
-
-async function createEmployee(account, employee, tokens) {
-    tokens = await helperModule.redirectToLogin(tokens);
-
-    if(tokens != false) {
-        const url = `http://localhost:8080/user/main/organisation/employee`;
-        const data = {
-            account,
-            employee
-        };
-        const config = {
-            headers: {
-                'Authorization': `Token: ${tokens.accessToken}`
-            }
-        };
-        let response;
-
-        try {
-            await axios
-                .post(url, data, config)
-                .then(function (resp) {
-                    console.log(resp);
-                    response = {
-                        status: resp.status,
-                        department: resp.data.response
-                    }
-                })
-                .catch(function (err) {
-                    console.log(err);
-                    response = {
-                        status: err.response.status,
-                        message: err.message,
-                        serverMessage: err.response.data.error_message
-                    }
-                });
-        } catch (err) {
-            response = {
-                status: 900,
-                message: err.message,
-                serverMessage: 'Internal error.'
-            }
-        }
-
-        return response;
-    }
-}
-
-async function getAccountDetails(username, tokens) {
-    tokens = await helperModule.redirectToLogin(tokens);
-
-    if(tokens != false) {
-        const url = `http://localhost:8080/user/main/organisation/account/${username}`;
-        const config = {
-            headers: {
-                'Authorization': `Token: ${tokens.accessToken}`
-            }
-        };
-        let response;
-
-        try {
-            await axios
-                .get(url, config)
-                .then(function (resp) {
-                    console.log(resp);
-                    response = {
-                        status: resp.status,
-                        username: resp.data.username,
-                        email: resp.data.email,
-                        dateCreated: resp.data.dateCreated,
-                        employee: resp.data.employee,
-                        roles: resp.data.roles
-                    }
-                })
-                .catch(function (err) {
-                    console.log(err);
-                    response = {
-                        status: err.response.status,
-                        message: err.message,
-                        serverMessage: err.response.data.error_message
-                    }
-                });
-        } catch (err) {
-            response = {
-                status: 900,
-                message: err.message,
-                serverMessage: 'Internal error.'
-            }
-        }
-
-        return response;
-    }
-}
-
-async function assignEmployeeToDepartment(idOrg, idEmp, depName, tokens) {
-    tokens = await helperModule.redirectToLogin(tokens);
-
-    if(tokens != false) {
-        const url = `http://localhost:8080/user/main/organisation/department/employee/assign`;
-        const config = {
-            headers: {
-                'Authorization': `Token: ${tokens.accessToken}`
-            }
-        };
-        const data = {
-            idOrg,
-            idEmp,
-            depName
-        }
-        let response;
-
-        try {
-            await axios
-                .post(url, data, config)
-                .then(function (resp) {
-                    console.log(resp);
-                    response = {
-                        status: resp.status,
-                        department: resp.data.department
-                    }
-                })
-                .catch(function (err) {
-                    console.log(err);
-                    response = {
-                        status: err.response.status,
-                        message: err.message,
-                        serverMessage: err.response.data.error_message
-                    }
-                });
-        } catch (err) {
-            response = {
-                status: 900,
-                message: err.message,
-                serverMessage: 'Internal error.'
-            }
-        }
-
-        return response;
-    }
-}
-
-async function unassignEmployeeFromDepartment(idOrg, idEmp, depName, tokens) {
-    tokens = await helperModule.redirectToLogin(tokens);
-
-    if(tokens != false) {
-        const url = `http://localhost:8080/user/main/organisation/department/employee/unassign`;
-        const config = {
-            headers: {
-                'Authorization': `Token: ${tokens.accessToken}`
-            }
-        };
-        const data = {
-            idOrg,
-            idEmp,
-            depName
-        }
-        let response;
-
-        try {
-            await axios
-                .post(url, data, config)
-                .then(function (resp) {
-                    console.log(resp);
-                    response = {
-                        status: resp.status,
-                        department: resp.data.department
-                    }
-                })
-                .catch(function (err) {
-                    console.log(err);
-                    response = {
-                        status: err.response.status,
-                        message: err.message,
-                        serverMessage: err.response.data.error_message
-                    }
-                });
-        } catch (err) {
-            response = {
-                status: 900,
-                message: err.message,
-                serverMessage: 'Internal error.'
-            }
-        }
-
-        return response;
-    }
-}
-
-async function getDepartmentById(idDep, tokens) {
-    tokens = await helperModule.redirectToLogin(tokens);
-
-    if(tokens != false) {
-        const url = `http://localhost:8080/user/main/organisation/department/${idDep}`;
-        const config = {
-            headers: {
-                'Authorization': `Token: ${tokens.accessToken}`
-            }
-        };
-        let response;
-
-        try {
-            await axios
-                .get(url, config)
-                .then(function (resp) {
-                    console.log(resp);
-                    response = {
-                        status: resp.status,
-                        id: resp.data.id,
-                        name: resp.data.name,
-                        manager: resp.data.manager,
-                        employees: resp.data.employees
-                    }
-                })
-                .catch(function (err) {
-                    console.log(err);
-                    response = {
-                        status: err.response.status,
-                        message: err.message,
-                        serverMessage: err.response.data.error_message
-                    }
-                });
-        } catch (err) {
-            response = {
-                status: 900,
-                message: err.message,
-                serverMessage: 'Internal error.'
-            }
-        }
-
-        return response;
-    }
-}
-
-async function editDepartment(department, tokens) {
-    tokens = await helperModule.redirectToLogin(tokens);
-
-    if(tokens != false) {
-        const url = `http://localhost:8080/user/main/organisation/department`;
-        const config = {
-            headers: {
-                'Authorization': `Token: ${tokens.accessToken}`
-            }
-        };
-        const data = {
-            idDep: department.id,
-            depName: department.name,
-            idMan: department.idMan == null ? null : department.idMan
-        };
-        let response;
-
-        try {
-            await axios
-                .put(url, data, config)
-                .then(function (resp) {
-                    console.log(resp);
-                    response = {
-                        status: resp.status
-                    }
-                })
-                .catch(function (err) {
-                    console.log(err);
-                    response = {
-                        status: err.response.status,
-                        message: err.message,
-                        serverMessage: err.response.data.error_message
-                    }
-                });
-        } catch (err) {
-            response = {
-                status: 900,
-                message: err.message,
-                serverMessage: 'Internal error.'
-            }
-        }
-
-        return response;
-    }
-}
-
-module.exports.getOrganisation = getOrganisation;
-module.exports.getOrganisationEmployees = getOrganisationEmployees;
-module.exports.createDepartment = createDepartment;
-module.exports.createEmployee = createEmployee;
-module.exports.getAccountDetails = getAccountDetails;
-module.exports.assignEmployeeToDepartment = assignEmployeeToDepartment;
-module.exports.unassignEmployeeFromDepartment = unassignEmployeeFromDepartment;
-module.exports.getDepartmentById = getDepartmentById;
-module.exports.editDepartment = editDepartment;
-},{"./Helper.js":38,"./Security.js":39,"axios":1}]},{},[37]);
+},{"./Helper":38,"axios":1}]},{},[37]);

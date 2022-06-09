@@ -1,7 +1,5 @@
-// Javascript script which will be bundled and used inside the Register.html page.
-
-const helperModule = require('./modules/Helper.js');
-const securityModule = require('./modules/Security.js');
+const helperModule = require('../modules/Helper.js');
+const organisationDB = require('../modules/OrganisationDB.js');
 
 function verifyOrganisationDetails(name, sign, cui, domain, alertPlaceholder) {
     if (helperModule.verifyInputIsEmpty(name)) {
@@ -151,9 +149,7 @@ function verifyData() {
 }
 
 async function executeRegister(registerData) {
-    console.log('Registering data...');
-
-    const response = await securityModule.requestRegister(registerData);
+    const response = await organisationDB.registerOrganisation(registerData);
 
     if(response.status != 201) {
         const alertPlaceholder = document.getElementById('errorAlertPlaceholder');

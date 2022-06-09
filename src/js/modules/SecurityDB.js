@@ -1,37 +1,6 @@
 const axios = require("axios");
 const helperModule = require("./Helper");
 
-async function requestRegister(registerData) {
-    const url = 'http://localhost:8080/security/organisation/register';
-    let response;
-
-    try {
-        await axios
-            .post(url, registerData)
-            .then(function (resp) {
-                response = {
-                    status: resp.status
-                }
-            })
-            .catch(function (err) {
-                response = {
-                    status: err.response.status,
-                    message: err.message,
-                    serverMessage: err.response.data.error_message
-                }
-            });
-    } catch(err) {
-        response = {
-            status: 900,
-            message: err.message,
-            serverMessage: 'Internal error'
-        }
-    }
-
-
-    return response;
-}
-
 async function requestLogin(user, pass) {
     const data = {
         username: user,
@@ -195,7 +164,6 @@ async function getRoles(tokens) {
 }
 
 module.exports.requestLogin = requestLogin;
-module.exports.requestRegister = requestRegister;
 module.exports.requestTokenRefresh = requestTokenRefresh;
 module.exports.ping = ping;
 module.exports.getRoles = getRoles;

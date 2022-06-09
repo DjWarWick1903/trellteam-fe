@@ -4387,55 +4387,262 @@ process.umask = function() { return 0; };
 },{}],37:[function(require,module,exports){
 (function (global){(function (){
 const helperModule = require('../modules/Helper.js');
-const securityDB = require('../modules/SecurityDB.js');
+const boardDB = require('../modules/BoardDB.js');
 
-async function executeLogin(username, password) {
-    const response = await securityDB.requestLogin(username, password);
+function getTodoCards(cards) {
+    let todoCards = `
+        <div class="card status">
+            <div class="card-header text-white">To do</div>
+            <div class="card-body">
+    `;
+
+    for(const card of cards) {
+        if(card.status != 'TO DO')
+            continue;
+
+        const cardHTML = `
+            <div class="card ticket">
+                <div class="card-header text-white">${card.title}</div>
+                <div class="card-body">
+                    <p>Type: ${card.type.name}</p>
+                    <p>Asigned: ${card.assigned == null ? 'Unassigned' : card.assigned.username}</p>
+                </div>
+            </div><br>
+        `;
+
+        todoCards = todoCards.concat(cardHTML);
+    }
+
+    todoCards = todoCards.concat("</div></div>")
+    return todoCards;
+}
+
+function getInProgressCards(cards) {
+    let progressCards = `
+        <div class="card status">
+            <div class="card-header text-white">In progress</div>
+            <div class="card-body">
+    `;
+
+    for(const card of cards) {
+        if(card.status != 'IN PROGRESS')
+            continue;
+
+        const cardHTML = `
+            <div class="card ticket">
+                <div class="card-header text-white">${card.title}</div>
+                <div class="card-body">
+                    <p>Type: ${card.type.name}</p>
+                    <p>Asigned: ${card.assigned == null ? 'Unassigned' : card.assigned.username}</p>
+                </div>
+            </div><br>
+        `;
+
+        progressCards = progressCards.concat(cardHTML);
+    }
+
+    progressCards = progressCards.concat("</div></div>")
+    return progressCards;
+}
+
+function getDevDoneCards(cards) {
+    let doneCards = `
+        <div class="card status">
+            <div class="card-header text-white">Done</div>
+            <div class="card-body">
+    `;
+
+    for(const card of cards) {
+        if(card.status != 'DONE')
+            continue;
+
+        const cardHTML = `
+            <div class="card ticket">
+                <div class="card-header text-white">${card.title}</div>
+                <div class="card-body">
+                    <p>Type: ${card.type.name}</p>
+                    <p>Asigned: ${card.assigned == null ? 'Unassigned' : card.assigned.username}</p>
+                </div>
+            </div><br>
+        `;
+
+        doneCards = doneCards.concat(cardHTML);
+    }
+
+    doneCards = doneCards.concat("</div></div>")
+    return doneCards;
+}
+
+async function fillBoardsDetails(idDep, tokens) {
+    const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
+    const response = await boardDB.getDepartmentBoards(idDep, tokens);
 
     if(response.status == 200) {
-        global.window.sessionStorage.setItem('accessToken', response.accessToken);
-        global.window.sessionStorage.setItem('refreshToken', response.refreshToken);
-        global.window.sessionStorage.setItem('roles', response.roles);
-        global.window.sessionStorage.setItem('username', username);
+        const boards = response.boards;
+        const boardsElement = document.getElementById('boards');
+        let boardsHTML = ``;
+
+        for(const board of boards) {
+            const cards = board.cards;
+
+            const todoCardsHTML = getTodoCards(cards);
+            const progressCardsHTML = getInProgressCards(cards);
+            const doneCardsHTML = getDevDoneCards(cards);
+
+            let boardHTML = `
+                <div class="justify-content-center d-flex">
+                    <button class="btn btn-primary board" type="button" data-bs-toggle="collapse" data-bs-target="#board${board.id}">
+                        ${board.title}  <br>  Version: ${board.version}  <br>  Release: ${board.release}
+                    </button>
+                </div><br>
+                <div class="collapse" id="board${board.id}">
+                    <div class="justify-content-center d-flex">
+                        <div class="card col-12 mx-auto" style="width: 100%">
+                            <div class="card-body col-12 mx-auto">
+                                <div class="container">
+                                    <div class="row">
+                                        <div class="col">
+                                            ${todoCardsHTML}
+                                        </div>
+                                        <div class="col">
+                                            ${progressCardsHTML}
+                                        </div>
+                                        <div class="col">
+                                            ${doneCardsHTML}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div><br>
+            `;
+
+            boardsHTML = boardsHTML.concat(boardHTML);
+        }
+
+        boardsElement.innerHTML = boardsHTML;
+
+        return true;
     } else {
-        const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
-        helperModule.showAlert("There was an error logging in. Please try again.", 'danger', alertPlaceholder);
-    }
-
-    return response.status;
-}
-
-function verifyCredentials(username, password) {
-    const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
-
-    if(helperModule.verifyInputIsEmpty(username)) {
-        helperModule.showAlert("Please insert a valid username.", 'info', alertPlaceholder);
+        helperModule.showAlert('Boards could not be fetched because of a server error.', 'danger', alertPlaceholder);
         return false;
     }
-
-    if(helperModule.verifyInputIsEmpty(password)) {
-        helperModule.showAlert("Please insert a valid password.", 'info', alertPlaceholder);
-        return false;
-    }
-
-    return true;
 }
 
-function isRegistered() {
-    const queryString = global.window.location.search;
-    const urlParams = new URLSearchParams(queryString);
+function createLinks(idDep) {
+    const boardsLinks = document.getElementById('BoardsLinks');
+    const newBoardHtml = `
+        <li><a id="Board" class="nav-link" href="NewBoard.html?id=${idDep}">Create board</a></li>
+    `;
+    const newTicketHtml = `
+        <li><a id="Ticket" class="nav-link" href="NewTicket.html?id=${idDep}">Create ticket</a></li>
+    `;
 
-    if(urlParams.has('registered')) {
-        const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
-        helperModule.showAlert("Your organisation has been registered. Please log in.", 'success', alertPlaceholder);
-    }
+    boardsLinks.innerHTML = `
+        ${newBoardHtml}
+        ${newTicketHtml}
+    `;
 }
-
-global.window.verifyCredentials = verifyCredentials;
-global.window.executeLogin = executeLogin;
-global.window.isRegistered = isRegistered;
+global.window.fillBoardsDetails = fillBoardsDetails;
+global.window.createLinks = createLinks;
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../modules/Helper.js":38,"../modules/SecurityDB.js":39}],38:[function(require,module,exports){
+},{"../modules/BoardDB.js":38,"../modules/Helper.js":39}],38:[function(require,module,exports){
+const helperModule = require("./Helper");
+const axios = require("axios");
+
+async function createBoard(board, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/board/main`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        };
+        let response;
+
+        try {
+            await axios
+                .post(url, board, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    response = {
+                        status: resp.status,
+                        id: resp.data.id,
+                        title: resp.data.title,
+                        dateCreated: resp.data.dateCreated,
+                        idDep: resp.data.idDepartment,
+                        version: resp.data.version,
+                        release: resp.data.release
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function getDepartmentBoards(idDep, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/board/department/${idDep}`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        };
+        let response;
+
+        try {
+            await axios
+                .get(url, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    response = {
+                        status: resp.status,
+                        boards: resp.data
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
+
+        return response;
+    }
+}
+
+module.exports.createBoard = createBoard;
+module.exports.getDepartmentBoards = getDepartmentBoards;
+},{"./Helper":39,"axios":1}],39:[function(require,module,exports){
 (function (global){(function (){
 const securityModule = require("./SecurityDB");
 
@@ -4521,7 +4728,7 @@ module.exports.difference = difference;
 module.exports.employeesUnion = employeesUnion;
 module.exports.employeeDifference = employeeDifference;
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./SecurityDB":39}],39:[function(require,module,exports){
+},{"./SecurityDB":40}],40:[function(require,module,exports){
 const axios = require("axios");
 const helperModule = require("./Helper");
 
@@ -4691,4 +4898,4 @@ module.exports.requestLogin = requestLogin;
 module.exports.requestTokenRefresh = requestTokenRefresh;
 module.exports.ping = ping;
 module.exports.getRoles = getRoles;
-},{"./Helper":38,"axios":1}]},{},[37]);
+},{"./Helper":39,"axios":1}]},{},[37]);

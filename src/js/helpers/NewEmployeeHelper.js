@@ -1,9 +1,10 @@
-const helperModule = require('./modules/Helper.js');
-const userModule = require('./modules/User.js');
-const securityModule = require('./modules/Security.js');
+const helperModule = require('../modules/Helper.js');
+const securityDB = require('../modules/SecurityDB.js');
+const organisationDB = require('../modules/OrganisationDB.js');
+const employeeDB = require('../modules/EmployeeDB.js');
 
 async function fillRoles(tokens) {
-    const response = await securityModule.getRoles(tokens);
+    const response = await securityDB.getRoles(tokens);
     const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
 
     if(response.status == 200) {
@@ -23,7 +24,7 @@ async function fillRoles(tokens) {
 }
 
 async function fillOrganisationDetails(username, tokens) {
-    const response = await userModule.getOrganisation(username, tokens);
+    const response = await organisationDB.getOrganisationByUsername(username, tokens);
     const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
 
     if(response.status == 200) {
@@ -42,6 +43,23 @@ async function fillOrganisationDetails(username, tokens) {
         departmentsField.innerHTML = depsHTML;
     } else {
         helperModule.showAlert('Organisation details could not be fetched because of a server problem.', 'danger', alertPlaceholder);
+    }
+}
+
+async function createEmployee(account, employee, tokens) {
+    if(!verifyEmployeeDetails(account, employee)) {
+        return false;
+    }
+
+    const response = await employeeDB.createEmployee(account, employee, tokens);
+    const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
+
+    if(response.status == 201) {
+        helperModule.showAlert('Employee has been created succesfully!', 'success', alertPlaceholder);
+        return true;
+    } else {
+        helperModule.showAlert('Organisation details could not be fetched because of a server problem.', 'danger', alertPlaceholder);
+        return false;
     }
 }
 
@@ -109,23 +127,6 @@ function verifyEmployeeDetails(account, employee) {
     }
 
     return true;
-}
-
-async function createEmployee(account, employee, tokens) {
-    if(!verifyEmployeeDetails(account, employee)) {
-        return false;
-    }
-
-    const response = await userModule.createEmployee(account, employee, tokens);
-    const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
-
-    if(response.status == 201) {
-        helperModule.showAlert('Employee has been created succesfully!', 'success', alertPlaceholder);
-        return true;
-    } else {
-        helperModule.showAlert('Organisation details could not be fetched because of a server problem.', 'danger', alertPlaceholder);
-        return false;
-    }
 }
 
 global.window.fillRoles = fillRoles;

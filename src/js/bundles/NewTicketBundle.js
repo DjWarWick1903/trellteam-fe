@@ -4387,55 +4387,387 @@ process.umask = function() { return 0; };
 },{}],37:[function(require,module,exports){
 (function (global){(function (){
 const helperModule = require('../modules/Helper.js');
-const securityDB = require('../modules/SecurityDB.js');
+const departmentDB = require('../modules/DepartmentDB.js');
+const boardDB = require('../modules/BoardDB.js');
+const organisationDB = require('../modules/OrganisationDB.js');
 
-async function executeLogin(username, password) {
-    const response = await securityDB.requestLogin(username, password);
+function createLinks(idDep) {
+    const boardsLinks = document.getElementById('BoardsLinks');
+    const newBoardHtml = `<li><a id="Board" class="nav-link" href="NewBoard.html?id=${idDep}">Create board</a></li>`;
+    const newTicketHtml = `<li><a id="Ticket" class="nav-link active" href="NewTicket.html?id=${idDep}">Create ticket</a></li>`;
+
+    boardsLinks.innerHTML = `
+        ${newBoardHtml}
+        ${newTicketHtml}
+    `;
+}
+
+async function fillDepartments(idOrg, tokens) {
+    const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
+    const response = await departmentDB.getOrganisationDepartments(idOrg, tokens);
+
+    const departmentsSelect = document.getElementById('department');
+    let departmentsHTML = `<option value="Undefined" id="0" selected>Undefined</option>`;
 
     if(response.status == 200) {
-        global.window.sessionStorage.setItem('accessToken', response.accessToken);
-        global.window.sessionStorage.setItem('refreshToken', response.refreshToken);
-        global.window.sessionStorage.setItem('roles', response.roles);
-        global.window.sessionStorage.setItem('username', username);
+        const departments = response.departments;
+
+        for(const department of departments) {
+            const depHTML = `<option value="${department.name}" id="${department.id}">${department.name}</option>`;
+            departmentsHTML = departmentsHTML.concat(depHTML);
+        }
+
+        departmentsSelect.innerHTML = departmentsHTML;
+        return true;
     } else {
-        const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
-        helperModule.showAlert("There was an error logging in. Please try again.", 'danger', alertPlaceholder);
+        helperModule.showAlert('Departments could not be fetched because of a server error.', 'danger', alertPlaceholder);
+        return false;
     }
-
-    return response.status;
 }
 
-function verifyCredentials(username, password) {
+async function fillBoards(idDep, tokens) {
     const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
+    const boardSelect = document.getElementById('board');
+    let boardsHTML = `<option value="Undefined" id="0" selected>Undefined</option>`;
 
-    if(helperModule.verifyInputIsEmpty(username)) {
-        helperModule.showAlert("Please insert a valid username.", 'info', alertPlaceholder);
-        return false;
+    if(idDep != 0) {
+        const response = await boardDB.getDepartmentBoards(idDep, tokens);
+
+        if(response.status == 200) {
+            const boards = response.boards;
+            for(const board of boards) {
+                const boardHTML = `<option value="${board.title}" id="${board.id}">${board.title}</option>`;
+                boardsHTML = boardsHTML.concat(boardHTML);
+            }
+        } else {
+            helperModule.showAlert('Boards could not be fetched because of a server error.', 'danger', alertPlaceholder);
+        }
     }
-
-    if(helperModule.verifyInputIsEmpty(password)) {
-        helperModule.showAlert("Please insert a valid password.", 'info', alertPlaceholder);
-        return false;
-    }
-
-    return true;
+    boardSelect.innerHTML = boardsHTML;
 }
 
-function isRegistered() {
-    const queryString = global.window.location.search;
-    const urlParams = new URLSearchParams(queryString);
+async function fillTypes(idOrg, tokens) {
+    const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
+    const response = await organisationDB.getTypes(idOrg, tokens);
 
-    if(urlParams.has('registered')) {
-        const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
-        helperModule.showAlert("Your organisation has been registered. Please log in.", 'success', alertPlaceholder);
+    if(response.status == 200) {
+        const typeSelect = document.getElementById('types');
+        let typesHTML = `<option value="Undefined" id="0" selected>Undefined</option>`;
+
+        const types = response.types;
+        for(const type of types) {
+            const typeHTML = `<option value="${type.name}" id="${type.id}">${type.name}</option>`;
+            typesHTML = typesHTML.concat(typeHTML);
+        }
+
+        typeSelect.innerHTML = typesHTML;
+    } else {
+        helperModule.showAlert('Types could not be fetched because of a server error.', 'danger', alertPlaceholder);
     }
 }
 
-global.window.verifyCredentials = verifyCredentials;
-global.window.executeLogin = executeLogin;
-global.window.isRegistered = isRegistered;
+async function createTicket(ticket, tokens) {
+    const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
+    const response = await organisationDB.createTicket(ticket, tokens);
+
+    if(response.status == 201) {
+        helperModule.showAlert('Ticket created successfully.', 'success', alertPlaceholder);
+
+    } else {
+        helperModule.showAlert('Ticket could not be created because of a server error.', 'danger', alertPlaceholder);
+    }
+}
+
+global.window.createLinks = createLinks;
+global.window.fillDepartments = fillDepartments;
+global.window.fillBoards = fillBoards;
+global.window.fillTypes = fillTypes;
+global.window.createTicket = createTicket;
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../modules/Helper.js":38,"../modules/SecurityDB.js":39}],38:[function(require,module,exports){
+},{"../modules/BoardDB.js":38,"../modules/DepartmentDB.js":39,"../modules/Helper.js":40,"../modules/OrganisationDB.js":41}],38:[function(require,module,exports){
+const helperModule = require("./Helper");
+const axios = require("axios");
+
+async function createBoard(board, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/board/main`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        };
+        let response;
+
+        try {
+            await axios
+                .post(url, board, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    response = {
+                        status: resp.status,
+                        id: resp.data.id,
+                        title: resp.data.title,
+                        dateCreated: resp.data.dateCreated,
+                        idDep: resp.data.idDepartment,
+                        version: resp.data.version,
+                        release: resp.data.release
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function getDepartmentBoards(idDep, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/board/department/${idDep}`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        };
+        let response;
+
+        try {
+            await axios
+                .get(url, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    response = {
+                        status: resp.status,
+                        boards: resp.data
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
+
+        return response;
+    }
+}
+
+module.exports.createBoard = createBoard;
+module.exports.getDepartmentBoards = getDepartmentBoards;
+},{"./Helper":40,"axios":1}],39:[function(require,module,exports){
+const helperModule = require("./Helper");
+const axios = require("axios");
+
+async function createDepartment(idOrganisation, departmentName, idManager, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/department/main`;
+        const data = {
+            depName: departmentName,
+            idOrg: idOrganisation,
+            idMan: idManager
+        };
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        };
+        let response;
+
+        try {
+            await axios
+                .post(url, data, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    response = {
+                        status: resp.status,
+                        department: resp.data.department
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function getDepartmentById(idDep, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/department/main/${idDep}`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        };
+        let response;
+
+        try {
+            await axios
+                .get(url, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    response = {
+                        status: resp.status,
+                        id: resp.data.id,
+                        name: resp.data.name,
+                        manager: resp.data.manager,
+                        employees: resp.data.employees
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function editDepartment(department, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/department/main`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        };
+        const data = {
+            idDep: department.id,
+            depName: department.name,
+            idMan: department.idMan == null ? null : department.idMan
+        };
+        let response;
+
+        try {
+            await axios
+                .put(url, data, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    response = {
+                        status: resp.status
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function getOrganisationDepartments(idOrg, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/department/organisation/${idOrg}`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        };
+        let response;
+
+        try {
+            await axios
+                .get(url, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    response = {
+                        status: resp.status,
+                        departments: resp.data
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
+
+        return response;
+    }
+}
+
+module.exports.getDepartmentById = getDepartmentById;
+module.exports.editDepartment = editDepartment;
+module.exports.createDepartment = createDepartment;
+module.exports.getOrganisationDepartments = getOrganisationDepartments;
+},{"./Helper":40,"axios":1}],40:[function(require,module,exports){
 (function (global){(function (){
 const securityModule = require("./SecurityDB");
 
@@ -4521,7 +4853,234 @@ module.exports.difference = difference;
 module.exports.employeesUnion = employeesUnion;
 module.exports.employeeDifference = employeeDifference;
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./SecurityDB":39}],39:[function(require,module,exports){
+},{"./SecurityDB":42}],41:[function(require,module,exports){
+const axios = require("axios");
+const helperModule = require("./Helper.js");
+
+async function registerOrganisation(registerData) {
+    const url = 'http://localhost:8080/organisation/main';
+    let response;
+
+    try {
+        await axios
+            .post(url, registerData)
+            .then(function (resp) {
+                response = {
+                    status: resp.status
+                }
+            })
+            .catch(function (err) {
+                response = {
+                    status: err.response.status,
+                    message: err.message,
+                    serverMessage: err.response.data.error_message
+                }
+            });
+    } catch(err) {
+        response = {
+            status: 900,
+            message: err.message,
+            serverMessage: 'Internal error'
+        }
+    }
+
+
+    return response;
+}
+
+async function getOrganisationByUsername(username, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/organisation/main/${username}`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        }
+        let response;
+
+        try {
+            await axios
+                .get(url, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    const organisation = {
+                        id: resp.data.id,
+                        name: resp.data.name,
+                        sign: resp.data.sign,
+                        dateCreated: resp.data.dateCreated,
+                        domain: resp.data.domain,
+                        cui: resp.data.cui
+                    };
+                    const departments = resp.data.departments;
+
+                    response = {
+                        status: resp.status,
+                        organisation,
+                        departments
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch(err) {
+            response = {
+                status: 404,
+                message: err.message,
+                serverMessage: 'Server could not be reached'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function createType(type, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/organisation/type`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        }
+        let response;
+
+        try {
+            await axios
+                .post(url, type, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    const type = {
+                        id: resp.data.id,
+                        name: resp.data.name,
+                        idOrganisation: resp.data.idOrganisation
+                    };
+
+                    response = {
+                        status: resp.status,
+                        type
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch(err) {
+            response = {
+                status: 404,
+                message: err.message,
+                serverMessage: 'Server could not be reached'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function getTypes(idOrg, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/organisation/type/${idOrg}`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        }
+        let response;
+
+        try {
+            await axios
+                .get(url, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    const types = resp.data;
+
+                    response = {
+                        status: resp.status,
+                        types
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch(err) {
+            response = {
+                status: 404,
+                message: err.message,
+                serverMessage: 'Server could not be reached'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function createTicket(ticket, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/card/main`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        }
+        let response;
+
+        try {
+            await axios
+                .post(url, ticket, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    response = {
+                        status: resp.status,
+                        ticket: resp.data
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch(err) {
+            response = {
+                status: 404,
+                message: err.message,
+                serverMessage: 'Server could not be reached'
+            }
+        }
+
+        return response;
+    }
+}
+
+module.exports.registerOrganisation = registerOrganisation;
+module.exports.getOrganisationByUsername = getOrganisationByUsername;
+module.exports.createType = createType;
+module.exports.getTypes = getTypes;
+module.exports.createTicket = createTicket;
+},{"./Helper.js":40,"axios":1}],42:[function(require,module,exports){
 const axios = require("axios");
 const helperModule = require("./Helper");
 
@@ -4691,4 +5250,4 @@ module.exports.requestLogin = requestLogin;
 module.exports.requestTokenRefresh = requestTokenRefresh;
 module.exports.ping = ping;
 module.exports.getRoles = getRoles;
-},{"./Helper":38,"axios":1}]},{},[37]);
+},{"./Helper":40,"axios":1}]},{},[37]);

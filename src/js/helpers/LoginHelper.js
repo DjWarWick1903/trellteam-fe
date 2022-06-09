@@ -1,14 +1,8 @@
-// Javascript script which will be bundled and used inside the Login.html page.
-const securityModule = require('./modules/Security');
-const helperModule = require('./modules/Helper.js');
+const helperModule = require('../modules/Helper.js');
+const securityDB = require('../modules/SecurityDB.js');
 
 async function executeLogin(username, password) {
-    console.log('Logging in...');
-    console.log(username);
-    console.log(password);
-
-    const response = await securityModule.requestLogin(username, password);
-    console.log(response);
+    const response = await securityDB.requestLogin(username, password);
 
     if(response.status == 200) {
         global.window.sessionStorage.setItem('accessToken', response.accessToken);

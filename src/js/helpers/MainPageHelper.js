@@ -1,17 +1,16 @@
-const userModule = require('./modules/User.js');
-const helperModule = require("./modules/Helper");
+const helperModule = require("../modules/Helper");
+const organisationDB = require('../modules/OrganisationDB.js');
 
 async function getMainPageDetails(username, tokens) {
     let response;
-    console.log(username);
-    console.log(tokens);
+
     if(username != null) {
-        response = await userModule.getOrganisation(username, tokens);
+        response = await organisationDB.getOrganisationByUsername(username, tokens);
     } else {
         global.window.location.replace("Login.html");
     }
 
-    if(response.status == 200) {
+    if(response != null && response.status == 200) {
         global.window.sessionStorage.setItem('orgId', response.organisation.id);
         let depsCard = '';
         const departments = response.departments;
@@ -30,6 +29,7 @@ async function getMainPageDetails(username, tokens) {
                             </form><br>
                             <form action="Board.html" method="get" class="container-fluid justify-content-center">
                                 <input type="hidden" name="department" value="${department.name}">
+                                <input type="hidden" name="id" value="${department.id}">
                                 <div class="col-4 mx-auto">
                                     <input class="btn btn-primary btn-lg" type="submit" value="Boards">
                                 </div>

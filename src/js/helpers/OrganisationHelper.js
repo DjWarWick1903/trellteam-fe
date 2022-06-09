@@ -1,7 +1,7 @@
-const userModule = require('./modules/User.js');
+const organisationDB = require('../modules/OrganisationDB.js');
 
 async function getOrganisationDetails(username, tokens) {
-    const response = await userModule.getMainPageDetails(username, tokens);
+    const response = await organisationDB.getOrganisationByUsername(username, tokens);
 
     if(response.status == 200) {
         const organisation = response.organisation;

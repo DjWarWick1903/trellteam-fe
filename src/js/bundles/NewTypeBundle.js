@@ -4387,55 +4387,64 @@ process.umask = function() { return 0; };
 },{}],37:[function(require,module,exports){
 (function (global){(function (){
 const helperModule = require('../modules/Helper.js');
-const securityDB = require('../modules/SecurityDB.js');
+const organisationDB = require('../modules/OrganisationDB.js');
 
-async function executeLogin(username, password) {
-    const response = await securityDB.requestLogin(username, password);
-
-    if(response.status == 200) {
-        global.window.sessionStorage.setItem('accessToken', response.accessToken);
-        global.window.sessionStorage.setItem('refreshToken', response.refreshToken);
-        global.window.sessionStorage.setItem('roles', response.roles);
-        global.window.sessionStorage.setItem('username', username);
-    } else {
-        const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
-        helperModule.showAlert("There was an error logging in. Please try again.", 'danger', alertPlaceholder);
-    }
-
-    return response.status;
-}
-
-function verifyCredentials(username, password) {
+function verifyName(name) {
     const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
 
-    if(helperModule.verifyInputIsEmpty(username)) {
-        helperModule.showAlert("Please insert a valid username.", 'info', alertPlaceholder);
-        return false;
-    }
-
-    if(helperModule.verifyInputIsEmpty(password)) {
-        helperModule.showAlert("Please insert a valid password.", 'info', alertPlaceholder);
+    if(helperModule.verifyInputIsEmpty(name)) {
+        helperModule.showAlert('Please specify the name of the new type.', 'info', alertPlaceholder);
         return false;
     }
 
     return true;
 }
 
-function isRegistered() {
-    const queryString = global.window.location.search;
-    const urlParams = new URLSearchParams(queryString);
+async function createType(type, tokens) {
+    const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
 
-    if(urlParams.has('registered')) {
-        const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
-        helperModule.showAlert("Your organisation has been registered. Please log in.", 'success', alertPlaceholder);
+    if(verifyName(type.name)) {
+        const response = await organisationDB.createType(type, tokens);
+
+        if(response.status == 201) {
+            helperModule.showAlert('Type successfully created.', 'success', alertPlaceholder);
+            listTypes(type.idOrganisation, tokens);
+            return;
+        }
+
+        helperModule.showAlert('Type could not be created because of a server error.', 'danger', alertPlaceholder);
     }
 }
 
-global.window.verifyCredentials = verifyCredentials;
-global.window.executeLogin = executeLogin;
-global.window.isRegistered = isRegistered;
+async function listTypes(idOrg, tokens) {
+    const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
+    const response = await organisationDB.getTypes(idOrg, tokens);
+
+    if(response.status == 200) {
+        const types = response.types;
+        const tableElement = document.getElementById('type-list');
+
+        let bodyHTML = ``;
+        for(const type of types) {
+            const body = `
+                <tr>
+                    <th scope="row">${type.id}</th>
+                    <td>${type.name}</td>
+                </tr>
+            `;
+            bodyHTML = bodyHTML.concat(body);
+        }
+
+        tableElement.innerHTML = bodyHTML;
+    } else {
+        helperModule.showAlert('Types could not be fetched because of a server error.', 'danger', alertPlaceholder);
+    }
+}
+
+global.window.createType = createType;
+global.window.listTypes = listTypes;
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../modules/Helper.js":38,"../modules/SecurityDB.js":39}],38:[function(require,module,exports){
+},{"../modules/Helper.js":38,"../modules/OrganisationDB.js":39}],38:[function(require,module,exports){
 (function (global){(function (){
 const securityModule = require("./SecurityDB");
 
@@ -4521,7 +4530,191 @@ module.exports.difference = difference;
 module.exports.employeesUnion = employeesUnion;
 module.exports.employeeDifference = employeeDifference;
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./SecurityDB":39}],39:[function(require,module,exports){
+},{"./SecurityDB":40}],39:[function(require,module,exports){
+const axios = require("axios");
+const helperModule = require("./Helper.js");
+
+async function registerOrganisation(registerData) {
+    const url = 'http://localhost:8080/organisation/main';
+    let response;
+
+    try {
+        await axios
+            .post(url, registerData)
+            .then(function (resp) {
+                response = {
+                    status: resp.status
+                }
+            })
+            .catch(function (err) {
+                response = {
+                    status: err.response.status,
+                    message: err.message,
+                    serverMessage: err.response.data.error_message
+                }
+            });
+    } catch(err) {
+        response = {
+            status: 900,
+            message: err.message,
+            serverMessage: 'Internal error'
+        }
+    }
+
+
+    return response;
+}
+
+async function getOrganisationByUsername(username, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/organisation/main/${username}`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        }
+        let response;
+
+        try {
+            await axios
+                .get(url, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    const organisation = {
+                        id: resp.data.id,
+                        name: resp.data.name,
+                        sign: resp.data.sign,
+                        dateCreated: resp.data.dateCreated,
+                        domain: resp.data.domain,
+                        cui: resp.data.cui
+                    };
+                    const departments = resp.data.departments;
+
+                    response = {
+                        status: resp.status,
+                        organisation,
+                        departments
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch(err) {
+            response = {
+                status: 404,
+                message: err.message,
+                serverMessage: 'Server could not be reached'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function createType(type, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/organisation/type`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        }
+        let response;
+
+        try {
+            await axios
+                .post(url, type, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    const type = {
+                        id: resp.data.id,
+                        name: resp.data.name,
+                        idOrganisation: resp.data.idOrganisation
+                    };
+
+                    response = {
+                        status: resp.status,
+                        type
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch(err) {
+            response = {
+                status: 404,
+                message: err.message,
+                serverMessage: 'Server could not be reached'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function getTypes(idOrg, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/organisation/type/${idOrg}`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        }
+        let response;
+
+        try {
+            await axios
+                .get(url, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    const types = resp.data;
+
+                    response = {
+                        status: resp.status,
+                        types
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch(err) {
+            response = {
+                status: 404,
+                message: err.message,
+                serverMessage: 'Server could not be reached'
+            }
+        }
+
+        return response;
+    }
+}
+
+module.exports.registerOrganisation = registerOrganisation;
+module.exports.getOrganisationByUsername = getOrganisationByUsername;
+module.exports.createType = createType;
+module.exports.getTypes = getTypes;
+},{"./Helper.js":38,"axios":1}],40:[function(require,module,exports){
 const axios = require("axios");
 const helperModule = require("./Helper");
 
