@@ -16,6 +16,7 @@ window.createLinks(idDep);
 window.fillDepartments(idOrg, tokens);
 window.fillBoards(0, tokens);
 window.fillTypes(idOrg, tokens);
+window.fillUrgency();
 
 document.getElementById('department').addEventListener('change', async function(e) {
     e.preventDefault();
@@ -49,6 +50,7 @@ document.getElementById('Create').addEventListener('click', async function(e) {
     e.preventDefault();
     const titleElement = document.getElementById('title');
     const typeSelect = document.getElementById('types');
+    const urgencySelect = document.getElementById('urgency');
     const difficultyElement = document.getElementById('difficulty');
     const descriptionElement = document.getElementById('description');
     const departmentSelect = document.getElementById('department');
@@ -57,6 +59,7 @@ document.getElementById('Create').addEventListener('click', async function(e) {
     const ticket = {
         title: titleElement.value,
         typeId: typeSelect[typeSelect.selectedIndex].id,
+        urgency: urgencySelect[urgencySelect.selectedIndex].value,
         difficulty: difficultyElement.value,
         description: descriptionElement.value,
         boardId: boardSelect[boardSelect.selectedIndex].id,

@@ -4390,6 +4390,8 @@ const helperModule = require('../modules/Helper.js');
 const departmentDB = require('../modules/DepartmentDB.js');
 const boardDB = require('../modules/BoardDB.js');
 const organisationDB = require('../modules/OrganisationDB.js');
+const ticketDB = require('../modules/TicketDB.js');
+const {getUrgencyTypes} = require("../modules/TicketDB");
 
 function createLinks(idDep) {
     const boardsLinks = document.getElementById('BoardsLinks');
@@ -4466,13 +4468,25 @@ async function fillTypes(idOrg, tokens) {
     }
 }
 
+function fillUrgency() {
+    const urgencySelect = document.getElementById('urgency');
+    const urgencyTypes = ticketDB.getUrgencyTypes();
+
+    let urgenciesHTML = `<option value="Undefined" id="0" selected>Undefined</option>`;
+    for(const type of urgencyTypes) {
+        const urgHTML = `<option value="${type.name}" id="${type.id}">${type.name}</option>`;
+        urgenciesHTML = urgenciesHTML.concat(urgHTML);
+    }
+
+    urgencySelect.innerHTML = urgenciesHTML;
+}
+
 async function createTicket(ticket, tokens) {
     const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
-    const response = await organisationDB.createTicket(ticket, tokens);
+    const response = await ticketDB.createTicket(ticket, tokens);
 
     if(response.status == 201) {
         helperModule.showAlert('Ticket created successfully.', 'success', alertPlaceholder);
-
     } else {
         helperModule.showAlert('Ticket could not be created because of a server error.', 'danger', alertPlaceholder);
     }
@@ -4482,9 +4496,10 @@ global.window.createLinks = createLinks;
 global.window.fillDepartments = fillDepartments;
 global.window.fillBoards = fillBoards;
 global.window.fillTypes = fillTypes;
+global.window.fillUrgency = fillUrgency;
 global.window.createTicket = createTicket;
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../modules/BoardDB.js":38,"../modules/DepartmentDB.js":39,"../modules/Helper.js":40,"../modules/OrganisationDB.js":41}],38:[function(require,module,exports){
+},{"../modules/BoardDB.js":38,"../modules/DepartmentDB.js":39,"../modules/Helper.js":40,"../modules/OrganisationDB.js":41,"../modules/TicketDB":43,"../modules/TicketDB.js":43}],38:[function(require,module,exports){
 const helperModule = require("./Helper");
 const axios = require("axios");
 
@@ -5033,53 +5048,11 @@ async function getTypes(idOrg, tokens) {
     }
 }
 
-async function createTicket(ticket, tokens) {
-    tokens = await helperModule.redirectToLogin(tokens);
-
-    if(tokens != false) {
-        const url = `http://localhost:8080/card/main`;
-        const config = {
-            headers: {
-                'Authorization': `Token: ${tokens.accessToken}`
-            }
-        }
-        let response;
-
-        try {
-            await axios
-                .post(url, ticket, config)
-                .then(function (resp) {
-                    console.log(resp);
-                    response = {
-                        status: resp.status,
-                        ticket: resp.data
-                    }
-                })
-                .catch(function (err) {
-                    console.log(err);
-                    response = {
-                        status: err.response.status,
-                        message: err.message,
-                        serverMessage: err.response.data.error_message
-                    }
-                });
-        } catch(err) {
-            response = {
-                status: 404,
-                message: err.message,
-                serverMessage: 'Server could not be reached'
-            }
-        }
-
-        return response;
-    }
-}
-
 module.exports.registerOrganisation = registerOrganisation;
 module.exports.getOrganisationByUsername = getOrganisationByUsername;
 module.exports.createType = createType;
 module.exports.getTypes = getTypes;
-module.exports.createTicket = createTicket;
+
 },{"./Helper.js":40,"axios":1}],42:[function(require,module,exports){
 const axios = require("axios");
 const helperModule = require("./Helper");
@@ -5250,4 +5223,116 @@ module.exports.requestLogin = requestLogin;
 module.exports.requestTokenRefresh = requestTokenRefresh;
 module.exports.ping = ping;
 module.exports.getRoles = getRoles;
-},{"./Helper":40,"axios":1}]},{},[37]);
+},{"./Helper":40,"axios":1}],43:[function(require,module,exports){
+const axios = require("axios");
+const helperModule = require("./Helper.js");
+
+async function createTicket(ticket, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/card/main`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        }
+        let response;
+
+        try {
+            await axios
+                .post(url, ticket, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    response = {
+                        status: resp.status,
+                        ticket: resp.data
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch(err) {
+            response = {
+                status: 404,
+                message: err.message,
+                serverMessage: 'Server could not be reached'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function getTicket(idTicket, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/card/main/${idTicket}`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        }
+        let response;
+
+        try {
+            await axios
+                .get(url, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    const ticket = {
+                        id: resp.data.id,
+                        title: resp.data.title,
+                        difficulty: resp.data.difficulty,
+                        description: resp.data.description,
+                        notes: resp.data.notes,
+                        status: resp.data.status,
+                        publisher: resp.data.publisher,
+                        assigned: resp.data.assigned,
+                        type: resp.data.type
+                    }
+                    response = {
+                        status: resp.status,
+                        ticket
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch(err) {
+            response = {
+                status: 404,
+                message: err.message,
+                serverMessage: 'Server could not be reached'
+            }
+        }
+
+        return response;
+    }
+}
+
+function getUrgencyTypes() {
+    const low = { id: 1, name: 'Low'};
+    const medium = { id: 2, name: 'Medium'};
+    const high = { id: 3, name: 'High'};
+    const vHigh = { id: 4, name: 'Very High'};
+
+    const types = [low, medium, high, vHigh];
+    return types;
+}
+
+module.exports.createTicket = createTicket;
+module.exports.getTicket = getTicket;
+module.exports.getUrgencyTypes = getUrgencyTypes;
+},{"./Helper.js":40,"axios":1}]},{},[37]);

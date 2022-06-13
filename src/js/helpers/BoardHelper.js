@@ -1,6 +1,7 @@
 const helperModule = require('../modules/Helper.js');
 const boardDB = require('../modules/BoardDB.js');
 
+
 function getTodoCards(cards) {
     let todoCards = `
         <div class="card status">
@@ -13,13 +14,13 @@ function getTodoCards(cards) {
             continue;
 
         const cardHTML = `
-            <div class="card ticket">
-                <div class="card-header text-white">${card.title}</div>
-                <div class="card-body">
-                    <p>Type: ${card.type.name}</p>
-                    <p>Asigned: ${card.assigned == null ? 'Unassigned' : card.assigned.username}</p>
-                </div>
-            </div><br>
+            <div class="card p-2 ticket">
+                <a class="card-block stretched-link text-decoration-none" href="Ticket.html?id=${card.id}">
+                    <h4 class="card-title">${card.title}</h4>
+                    <p class="card-text">Type: ${card.type.name}</p>
+                    <p class="card-text"><small class="text-muted">Assigned: ${card.assigned == null ? 'Unassigned' : card.assigned.username}</small></p>
+                </a>
+            </div>
         `;
 
         todoCards = todoCards.concat(cardHTML);
@@ -41,13 +42,13 @@ function getInProgressCards(cards) {
             continue;
 
         const cardHTML = `
-            <div class="card ticket">
-                <div class="card-header text-white">${card.title}</div>
-                <div class="card-body">
-                    <p>Type: ${card.type.name}</p>
-                    <p>Asigned: ${card.assigned == null ? 'Unassigned' : card.assigned.username}</p>
-                </div>
-            </div><br>
+            <div class="card p-2 ticket">
+                <a class="card-block stretched-link text-decoration-none" href="Ticket.html?id=${card.id}">
+                    <h4 class="card-title">${card.title}</h4>
+                    <p class="card-text">Type: ${card.type.name}</p>
+                    <p class="card-text"><small class="text-muted">Assigned: ${card.assigned == null ? 'Unassigned' : card.assigned.username}</small></p>
+                </a>
+            </div>
         `;
 
         progressCards = progressCards.concat(cardHTML);
@@ -69,13 +70,13 @@ function getDevDoneCards(cards) {
             continue;
 
         const cardHTML = `
-            <div class="card ticket">
-                <div class="card-header text-white">${card.title}</div>
-                <div class="card-body">
-                    <p>Type: ${card.type.name}</p>
-                    <p>Asigned: ${card.assigned == null ? 'Unassigned' : card.assigned.username}</p>
-                </div>
-            </div><br>
+            <div class="card p-2 ticket">
+                <a class="card-block stretched-link text-decoration-none" href="Ticket.html?id=${card.id}">
+                    <h4 class="card-title">${card.title}</h4>
+                    <p class="card-text">Type: ${card.type.name}</p>
+                    <p class="card-text"><small class="text-muted">Assigned: ${card.assigned == null ? 'Unassigned' : card.assigned.username}</small></p>
+                </a>
+            </div>
         `;
 
         doneCards = doneCards.concat(cardHTML);

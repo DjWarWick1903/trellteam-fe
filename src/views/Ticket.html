@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>TrellTeam - Login</title>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.css">
+        <link rel="stylesheet" href="/src/css/Ticket.css">
+        <script src="/src/js/bundles/TicketBundle.js"></script>
+    </head>
+
+    <body>
+        <div class="container mx-auto">
+            <h1 class="display-1"><strong>Trell Team</strong></h1>
+            <hr>
+            <!-- Navbar -->
+            <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+                <div class="container-fluid">
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+                        <ul class="nav navbar-nav me-auto">
+                            <li><a class="nav-link" aria-current="page" href="MainPage.html">Home</a></li>
+                            <li><a class="nav-link" href="Organisation.html">Organisation</a></li>
+                            <li><a class="nav-link" href="NewDepartment.html">Add Department</a></li>
+                            <li><a class="nav-link" href="NewEmployee.html">Add Employee</a></li>
+                            <li><a class="nav-link" href="AccountDetails.html">Account details</a></li>
+                            <li><a class="nav-link" href="Login.html">Logout</a></li>
+                        </ul>
+                        <ul class="nav navbar-nav navbar-right" id="BoardsLinks">
+
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+            <div class="announcer justify-content-center d-flex" id="errorAlertPlaceholder"></div><br>
+
+            <div id="ticket">
+                <div class="card" style="width: 100%">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="card" style="width: 80%">
+                                <div class="input-group mb-3 card-title p-2">
+                                    <span class="input-group-text text-white span" id="TitleAddon" style="width: 10%">Title</span>
+                                    <input type="text" class="form-control" id="title" aria-describedby="TitleAddon" style="width: 90%">
+                                </div>
+                                <hr>
+                                <div class="card-body">
+                                    <div class="input-group mb-3 detail">
+                                        <span class="input-group-text text-white span" id="TypeAddon">Type</span>
+                                        <select id="type" class="form-control" aria-describedby="TypeAddon">
+
+                                        </select>
+                                    </div>
+                                    <div class="input-group mb-3 detail">
+                                        <span class="input-group-text text-white span" id="UrgencyAddon">Urgency</span>
+                                        <select id="urgency" class="form-control" aria-describedby="UrgencyAddon">
+
+                                        </select>
+                                    </div>
+                                    <div class="input-group mb-3 detail">
+                                        <span class="input-group-text text-white span" id="StatusAddon">Status</span>
+                                        <input type="text" class="form-control" id="status" aria-describedby="StatusAddon" disabled>
+                                    </div>
+                                    <div class="input-group mb-3 detail">
+                                        <span class="input-group-text text-white span" id="DiffAddon">Difficulty</span>
+                                        <input type="text" class="form-control" id="difficulty" aria-describedby="DiffAddon" placeholder="No difficulty">
+                                    </div>
+                                    <div class="input-group mb-3 detail">
+                                        <span class="input-group-text text-white span" id="NoteAddon">Notes</span>
+                                        <textarea class="form-control" id="notes" aria-describedby="NoteAddon" placeholder="No notes"></textarea>
+                                    </div>
+                                    <span class="input-group-text text-white span detail" id="DescAddon">Description</span>
+                                    <textarea class="form-control" id="description" aria-describedby="DescAddon" placeholder="No description"></textarea>
+                                </div>
+                            </div>
+                            <div class="card" style="width: 20%">
+                                <div class="card-body">
+                                    <h4>Status</h4>
+                                    <hr>
+                                    <button class="btn btn-primary" id="todo" style="width: 100%;">TO DO</button>
+                                    <button class="btn btn-primary" id="progress" style="width: 100%;">IN PROGRESS</button>
+                                    <button class="btn btn-primary" id="done" style="width: 100%;">DONE</button>
+                                    <hr>
+
+                                    <span class="input-group-text text-white span" style="width: 100%">Publisher</span>
+                                    <input type="text" id="publisher" class="form-control" placeholder="Undefined" disabled>
+
+                                    <br>
+
+                                    <span class="input-group-text text-white span" style="width: 100%">Assigned</span>
+                                    <input type="text" id="assigned" class="form-control" placeholder="Undefined" disabled>
+                                    <br>
+                                    <button class="btn btn-primary" id="assign" value="Assign" style="width: 100%;" disabled>Assign</button>
+                                    <button class="btn btn-primary" id="unassign" value="Unassign" style="width: 100%;" disabled>Unassign</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="/src/js/page_scripts/Ticket.js" type="text/javascript"></script>
+        <script src="/node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>
+    </body>
+</html>

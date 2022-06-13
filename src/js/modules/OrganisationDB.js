@@ -177,50 +177,7 @@ async function getTypes(idOrg, tokens) {
     }
 }
 
-async function createTicket(ticket, tokens) {
-    tokens = await helperModule.redirectToLogin(tokens);
-
-    if(tokens != false) {
-        const url = `http://localhost:8080/card/main`;
-        const config = {
-            headers: {
-                'Authorization': `Token: ${tokens.accessToken}`
-            }
-        }
-        let response;
-
-        try {
-            await axios
-                .post(url, ticket, config)
-                .then(function (resp) {
-                    console.log(resp);
-                    response = {
-                        status: resp.status,
-                        ticket: resp.data
-                    }
-                })
-                .catch(function (err) {
-                    console.log(err);
-                    response = {
-                        status: err.response.status,
-                        message: err.message,
-                        serverMessage: err.response.data.error_message
-                    }
-                });
-        } catch(err) {
-            response = {
-                status: 404,
-                message: err.message,
-                serverMessage: 'Server could not be reached'
-            }
-        }
-
-        return response;
-    }
-}
-
 module.exports.registerOrganisation = registerOrganisation;
 module.exports.getOrganisationByUsername = getOrganisationByUsername;
 module.exports.createType = createType;
 module.exports.getTypes = getTypes;
-module.exports.createTicket = createTicket;

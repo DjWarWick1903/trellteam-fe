@@ -2,6 +2,8 @@ const helperModule = require('../modules/Helper.js');
 const departmentDB = require('../modules/DepartmentDB.js');
 const boardDB = require('../modules/BoardDB.js');
 const organisationDB = require('../modules/OrganisationDB.js');
+const ticketDB = require('../modules/TicketDB.js');
+const {getUrgencyTypes} = require("../modules/TicketDB");
 
 function createLinks(idDep) {
     const boardsLinks = document.getElementById('BoardsLinks');
@@ -78,13 +80,25 @@ async function fillTypes(idOrg, tokens) {
     }
 }
 
+function fillUrgency() {
+    const urgencySelect = document.getElementById('urgency');
+    const urgencyTypes = ticketDB.getUrgencyTypes();
+
+    let urgenciesHTML = `<option value="Undefined" id="0" selected>Undefined</option>`;
+    for(const type of urgencyTypes) {
+        const urgHTML = `<option value="${type.name}" id="${type.id}">${type.name}</option>`;
+        urgenciesHTML = urgenciesHTML.concat(urgHTML);
+    }
+
+    urgencySelect.innerHTML = urgenciesHTML;
+}
+
 async function createTicket(ticket, tokens) {
     const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
-    const response = await organisationDB.createTicket(ticket, tokens);
+    const response = await ticketDB.createTicket(ticket, tokens);
 
     if(response.status == 201) {
         helperModule.showAlert('Ticket created successfully.', 'success', alertPlaceholder);
-
     } else {
         helperModule.showAlert('Ticket could not be created because of a server error.', 'danger', alertPlaceholder);
     }
@@ -94,4 +108,5 @@ global.window.createLinks = createLinks;
 global.window.fillDepartments = fillDepartments;
 global.window.fillBoards = fillBoards;
 global.window.fillTypes = fillTypes;
+global.window.fillUrgency = fillUrgency;
 global.window.createTicket = createTicket;
