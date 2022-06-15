@@ -40,79 +40,54 @@ async function fetchTicketDetails(idTicket, idOrg, username, tokens) {
     if(response.status == 200) {
         const ticket = response.ticket;
 
-        const titleElement = document.getElementById('title');
-        const notesElement = document.getElementById('notes');
-        const difficultyElement = document.getElementById('difficulty');
-        const statusElement = document.getElementById('status');
-        const descriptionElement = document.getElementById('description');
+        // Ticket details
+        await setTicketDetails(ticket);
 
-        const publisherElement = document.getElementById('publisher');
-        const assignedElement = document.getElementById('assigned');
+        document.getElementById('title').onchange = function () {updateTicketOnChange(idTicket, username, 'title', tokens)};
+        document.getElementById('type').onchange = function () {updateTicketOnChange(idTicket, username, 'type', tokens)};
+        document.getElementById('urgency').onchange = function () {updateTicketOnChange(idTicket, username, 'urgency', tokens)};
+        document.getElementById('difficulty').onchange = function () {updateTicketOnChange(idTicket, username, 'difficulty', tokens)};
+        document.getElementById('notes').onchange = function () {updateTicketOnChange(idTicket, username, 'notes', tokens)};
+        document.getElementById('description').onchange = function () {updateTicketOnChange(idTicket, username, 'description', tokens)};
 
-        titleElement.value = ticket.title;
-        await fillTypes(idOrg, ticket.id, tokens);
-        fillUrgencyTypes();
-        notesElement.value = ticket.notes;
-        difficultyElement.value = ticket.difficulty;
-        statusElement.value = ticket.status;
-        descriptionElement.value = ticket.description;
-
-        const publisher = ticket.publisher;
-        publisherElement.value = publisher.username;
-
-        const assigned = ticket.assigned;
-        if(assigned != null) {
-            assignedElement.value = assigned.username;
-        }
-
-        if(assigned != null && assigned.username == username) {
-            document.getElementById('unassign').disabled = false;
-        } else {
-            document.getElementById('assign').disabled = false;
-        }
-
-        document.getElementById('title').onchange = function () {updateTicketOnChange(idTicket, tokens)};
-        document.getElementById('type').onchange = function () {updateTicketOnChange(idTicket, tokens)};
-        document.getElementById('urgency').onchange = function () {updateTicketOnChange(idTicket, tokens)};
-        document.getElementById('difficulty').onchange = function () {updateTicketOnChange(idTicket, tokens)};
-        document.getElementById('notes').onchange = function () {updateTicketOnChange(idTicket, tokens)};
-        document.getElementById('description').onchange = function () {updateTicketOnChange(idTicket, tokens)};
+        setCommentsHTML(ticket.comments);
+        setLogsHTML(ticket.logs);
     } else {
         helperModule.showAlert("Ticket could not be fetched because of a server error.", "danger", alertPlaceholder);
     }
 }
 
-async function updateTicketToDo(idTicket, tokens) {
+async function updateTicketToDo(idTicket, username, tokens) {
     const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
-    const response = await ticketDB.updateTicketInToDo(idTicket, tokens);
+    const response = await ticketDB.updateTicketInToDo(idTicket, username, tokens);
 
     if(response.status == 200) {
-        helperModule.showAlert("Ticket moved in TO DO successfully.", "success", alertPlaceholder);
         document.getElementById('status').value = "TO DO";
+        setLogsHTML(response.ticket.logs);
     } else {
         helperModule.showAlert("Ticket could not be moved to TO DO because of a server error.", "danger", alertPlaceholder);
     }
 }
 
-async function updateTicketInProgress(idTicket, tokens) {
+async function updateTicketInProgress(idTicket, username, tokens) {
     const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
-    const response = await ticketDB.updateTicketInProgress(idTicket, tokens);
+    const response = await ticketDB.updateTicketInProgress(idTicket, username, tokens);
 
     if(response.status == 200) {
-        helperModule.showAlert("Ticket moved to IN PROGRESS successfully.", "success", alertPlaceholder);
         document.getElementById('status').value = "IN PROGRESS";
+        setLogsHTML(response.ticket.logs);
     } else {
         helperModule.showAlert("Ticket could not be moved to IN PROGRESS because of a server error.", "danger", alertPlaceholder);
     }
 }
 
-async function updateTicketDone(idTicket, tokens) {
+async function updateTicketDone(idTicket, username, tokens) {
     const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
-    const response = await ticketDB.updateTicketInDone(idTicket, tokens);
+    const response = await ticketDB.updateTicketInDone(idTicket, username, tokens);
 
     if(response.status == 200) {
-        helperModule.showAlert("Ticket moved in DONE successfully.", "success", alertPlaceholder);
         document.getElementById('status').value = "DONE";
+        setLogsHTML(response.ticket.logs);
     } else {
         helperModule.showAlert("Ticket could not be moved to DONE because of a server error.", "danger", alertPlaceholder);
     }
@@ -124,6 +99,8 @@ async function updateTicket(ticket, tokens) {
 
     if(response.status != 200) {
         helperModule.showAlert("Ticket could not be updated because of a server error.", "danger", alertPlaceholder);
+    } else {
+        setLogsHTML(response.ticket.logs);
     }
 }
 
@@ -154,7 +131,7 @@ function showAlert(message, type) {
     helperModule.showAlert(message, type, alertPlaceholder);
 }
 
-async function updateTicketOnChange(idTicket, tokens) {
+async function updateTicketOnChange(idTicket, username, changed, tokens) {
     const titleElement = document.getElementById('title');
     const typeSelect = document.getElementById('type');
     const urgencySelect = document.getElementById('urgency');
@@ -169,10 +146,28 @@ async function updateTicketOnChange(idTicket, tokens) {
         urgency: urgencySelect[urgencySelect.selectedIndex].value,
         difficulty: difficultyElement.value,
         description: descriptionElement.value,
-        notes: notesElement.value
+        notes: notesElement.value,
+        changed,
+        username
     };
 
-    updateTicket(ticket, tokens);
+    await updateTicket(ticket, tokens);
+}
+
+async function createComment(idTicket, username, tokens) {
+    const commentElement = document.getElementById('newComment');
+    const comment = commentElement.value.trim();
+
+    if(comment != '') {
+        const response = await ticketDB.createCardComment(idTicket, username, comment, tokens);
+
+        if(response.status == 201) {
+            const ticket = response.ticket;
+
+            setCommentsHTML(ticket.comments);
+            setLogsHTML(ticket.logs);
+        }
+    }
 }
 
 global.window.fetchTicketDetails = fetchTicketDetails;
@@ -183,3 +178,86 @@ global.window.updateTicket = updateTicket;
 global.window.assignTicket = assignTicket;
 global.window.unassignTicket = unassignTicket;
 global.window.showAlert = showAlert;
+global.window.createComment = createComment;
+
+function setCommentsHTML(commentsList) {
+    const commentsArea = document.getElementById('comment-cards');
+    let comments = ``;
+
+    for(const comment of commentsList) {
+        const username = comment.user.username;
+        const text = comment.text;
+        const date = new Date(comment.commentDate);
+
+        const commentBody = `
+            <div class="card" style="width: 100%">
+                <div class="card-body">
+                    <h5 class="card-title">User: ${username}</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">${date.getDate()}-${date.getMonth()}-${date.getFullYear()} ${date.getHours()}:${date.getSeconds()}</h6>
+                    <p class="card-text">${text}</p>
+                </div>
+            </div>
+        `;
+
+
+        comments = comments.concat(commentBody);
+    }
+    commentsArea.innerHTML = comments;
+}
+
+function setLogsHTML(logsList) {
+    const logsArea = document.getElementById('log-cards');
+    let logs = ``;
+
+    for(const log of logsList) {
+        const username = log.user.username;
+        const text = log.text;
+        const date = new Date(log.logDate);
+
+        const logBody = `
+            <div class="card" style="width: 100%">
+                <div class="card-body">
+                    <h5 class="card-title">User: ${username}</h5>
+                    <h6 class="card-title">${date.getDate()}-${date.getMonth()}-${date.getFullYear()} ${date.getHours()}:${date.getSeconds()}</h6>
+                    <p class="card-text">${text}</p>
+                </div>
+            </div>
+        `;
+
+        logs = logs.concat(logBody);
+    }
+    logsArea.innerHTML = logs;
+}
+
+async function setTicketDetails(ticket) {
+    const titleElement = document.getElementById('title');
+    const notesElement = document.getElementById('notes');
+    const difficultyElement = document.getElementById('difficulty');
+    const statusElement = document.getElementById('status');
+    const descriptionElement = document.getElementById('description');
+
+    const publisherElement = document.getElementById('publisher');
+    const assignedElement = document.getElementById('assigned');
+
+    titleElement.value = ticket.title;
+    await fillTypes(idOrg, ticket.id, tokens);
+    fillUrgencyTypes();
+    notesElement.value = ticket.notes;
+    difficultyElement.value = ticket.difficulty;
+    statusElement.value = ticket.status;
+    descriptionElement.value = ticket.description;
+
+    const publisher = ticket.publisher;
+    publisherElement.value = publisher.username;
+
+    const assigned = ticket.assigned;
+    if(assigned != null) {
+        assignedElement.value = assigned.username;
+    }
+
+    if(assigned != null && assigned.username == username) {
+        document.getElementById('unassign').disabled = false;
+    } else {
+        document.getElementById('assign').disabled = false;
+    }
+}

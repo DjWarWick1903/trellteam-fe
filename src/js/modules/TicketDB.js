@@ -17,9 +17,22 @@ async function createTicket(ticket, tokens) {
             await axios
                 .post(url, ticket, config)
                 .then(function (resp) {
+                    const ticket = {
+                        id: resp.data.id,
+                        title: resp.data.title,
+                        difficulty: resp.data.difficulty,
+                        description: resp.data.description,
+                        notes: resp.data.notes,
+                        status: resp.data.status,
+                        publisher: resp.data.publisher,
+                        assigned: resp.data.assigned,
+                        type: resp.data.type,
+                        comments: resp.data.comments,
+                        logs: resp.data.logs
+                    }
                     response = {
                         status: resp.status,
-                        ticket: resp.data
+                        ticket
                     }
                 })
                 .catch(function (err) {
@@ -66,7 +79,9 @@ async function getTicket(idTicket, tokens) {
                         status: resp.data.status,
                         publisher: resp.data.publisher,
                         assigned: resp.data.assigned,
-                        type: resp.data.type
+                        type: resp.data.type,
+                        comments: resp.data.comments,
+                        logs: resp.data.logs
                     }
                     response = {
                         status: resp.status,
@@ -102,21 +117,25 @@ function getUrgencyTypes() {
     return types;
 }
 
-async function updateTicketInToDo(idTicket, tokens) {
+async function updateTicketInToDo(idTicket, username, tokens) {
     tokens = await helperModule.redirectToLogin(tokens);
 
     if(tokens != false) {
-        const url = `http://localhost:8080/card/main/todo/${idTicket}`;
+        const url = `http://localhost:8080/card/main/todo`;
         const config = {
             headers: {
                 'Authorization': `Token: ${tokens.accessToken}`
             }
         }
+        const data = {
+            id: idTicket,
+            username
+        };
         let response;
 
         try {
             await axios
-                .put(url, null, config)
+                .put(url, data, config)
                 .then(function (resp) {
                     const ticket = {
                         id: resp.data.id,
@@ -127,7 +146,9 @@ async function updateTicketInToDo(idTicket, tokens) {
                         status: resp.data.status,
                         publisher: resp.data.publisher,
                         assigned: resp.data.assigned,
-                        type: resp.data.type
+                        type: resp.data.type,
+                        comments: resp.data.comments,
+                        logs: resp.data.logs
                     }
                     response = {
                         status: resp.status,
@@ -153,21 +174,25 @@ async function updateTicketInToDo(idTicket, tokens) {
     }
 }
 
-async function updateTicketInProgress(idTicket, tokens) {
+async function updateTicketInProgress(idTicket, username, tokens) {
     tokens = await helperModule.redirectToLogin(tokens);
 
     if(tokens != false) {
-        const url = `http://localhost:8080/card/main/progress/${idTicket}`;
+        const url = `http://localhost:8080/card/main/progress`;
         const config = {
             headers: {
                 'Authorization': `Token: ${tokens.accessToken}`
             }
+        };
+        const data = {
+            id: idTicket,
+            username
         }
         let response;
 
         try {
             await axios
-                .put(url, null, config)
+                .put(url, data, config)
                 .then(function (resp) {
                     const ticket = {
                         id: resp.data.id,
@@ -178,7 +203,9 @@ async function updateTicketInProgress(idTicket, tokens) {
                         status: resp.data.status,
                         publisher: resp.data.publisher,
                         assigned: resp.data.assigned,
-                        type: resp.data.type
+                        type: resp.data.type,
+                        comments: resp.data.comments,
+                        logs: resp.data.logs
                     }
                     response = {
                         status: resp.status,
@@ -204,21 +231,25 @@ async function updateTicketInProgress(idTicket, tokens) {
     }
 }
 
-async function updateTicketInDone(idTicket, tokens) {
+async function updateTicketInDone(idTicket, username, tokens) {
     tokens = await helperModule.redirectToLogin(tokens);
 
     if(tokens != false) {
-        const url = `http://localhost:8080/card/main/done/${idTicket}`;
+        const url = `http://localhost:8080/card/main/done`;
         const config = {
             headers: {
                 'Authorization': `Token: ${tokens.accessToken}`
             }
-        }
+        };
+        const data = {
+            id: idTicket,
+            username
+        };
         let response;
 
         try {
             await axios
-                .put(url, null, config)
+                .put(url, data, config)
                 .then(function (resp) {
                     const ticket = {
                         id: resp.data.id,
@@ -229,7 +260,9 @@ async function updateTicketInDone(idTicket, tokens) {
                         status: resp.data.status,
                         publisher: resp.data.publisher,
                         assigned: resp.data.assigned,
-                        type: resp.data.type
+                        type: resp.data.type,
+                        comments: resp.data.comments,
+                        logs: resp.data.logs
                     }
                     response = {
                         status: resp.status,
@@ -280,7 +313,9 @@ async function updateTicket(ticket, tokens) {
                         status: resp.data.status,
                         publisher: resp.data.publisher,
                         assigned: resp.data.assigned,
-                        type: resp.data.type
+                        type: resp.data.type,
+                        comments: resp.data.comments,
+                        logs: resp.data.logs
                     }
                     response = {
                         status: resp.status,
@@ -335,7 +370,9 @@ async function assignTicket(idTicket, username, tokens) {
                         status: resp.data.status,
                         publisher: resp.data.publisher,
                         assigned: resp.data.assigned,
-                        type: resp.data.type
+                        type: resp.data.type,
+                        comments: resp.data.comments,
+                        logs: resp.data.logs
                     }
                     response = {
                         status: resp.status,
@@ -386,7 +423,67 @@ async function unassignTicket(idTicket, tokens) {
                         status: resp.data.status,
                         publisher: resp.data.publisher,
                         assigned: resp.data.assigned,
-                        type: resp.data.type
+                        type: resp.data.type,
+                        comments: resp.data.comments,
+                        logs: resp.data.logs
+                    }
+                    response = {
+                        status: resp.status,
+                        ticket
+                    }
+                })
+                .catch(function (err) {
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch(err) {
+            response = {
+                status: 404,
+                message: err.message,
+                serverMessage: 'Server could not be reached'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function createCardComment(idTicket, username, comment, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/card/comment`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        }
+        const data = {
+            comment,
+            username,
+            idCard: idTicket
+        }
+        let response;
+
+        try {
+            await axios
+                .post(url, data, config)
+                .then(function (resp) {
+                    const ticket = {
+                        id: resp.data.id,
+                        title: resp.data.title,
+                        difficulty: resp.data.difficulty,
+                        description: resp.data.description,
+                        notes: resp.data.notes,
+                        status: resp.data.status,
+                        publisher: resp.data.publisher,
+                        assigned: resp.data.assigned,
+                        type: resp.data.type,
+                        comments: resp.data.comments,
+                        logs: resp.data.logs
                     }
                     response = {
                         status: resp.status,
@@ -421,3 +518,4 @@ module.exports.updateTicketInDone = updateTicketInDone;
 module.exports.updateTicket = updateTicket;
 module.exports.assignTicket = assignTicket;
 module.exports.unassignTicket = unassignTicket;
+module.exports.createCardComment = createCardComment;

@@ -33,24 +33,20 @@ function OnInput() {
     this.style.height = (this.scrollHeight) + "px";
 }
 
-console.log(idTicket);
-console.log(idOrg);
-console.log(tokens);
-
 // insert ticket data into inputs
 window.fetchTicketDetails(idTicket, idOrg, username, tokens);
 
 // page functionality
 document.getElementById('todo').addEventListener('click', function() {
-   window.updateTicketToDo(idTicket, tokens);
+   window.updateTicketToDo(idTicket, username, tokens);
 });
 
 document.getElementById('progress').addEventListener('click', function() {
-    window.updateTicketInProgress(idTicket, tokens);
+    window.updateTicketInProgress(idTicket, username, tokens);
 });
 
 document.getElementById('done').addEventListener('click', function() {
-    window.updateTicketDone(idTicket, tokens);
+    window.updateTicketDone(idTicket, username, tokens);
 });
 
 document.getElementById('assign').addEventListener('click', function() {
@@ -59,4 +55,8 @@ document.getElementById('assign').addEventListener('click', function() {
 
 document.getElementById('unassign').addEventListener('click', function() {
     window.unassignTicket(idTicket, tokens);
+});
+
+document.getElementById('create').addEventListener('click', function() {
+    window.createComment(idTicket, username, tokens);
 });

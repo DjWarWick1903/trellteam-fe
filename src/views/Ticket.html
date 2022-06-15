@@ -99,6 +99,45 @@
                         </div>
                     </div>
                 </div>
+            </div><br>
+
+            <div id="ticket-details">
+                <div class="card" style="width: 100%">
+                    <div class="accordion" id="detailsAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="CommentsHeader">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseComments" aria-expanded="true" aria-controls="collapseComments">
+                                    Comments
+                                </button>
+                            </h2>
+                            <div id="collapseComments" class="accordion-collapse collapse show" aria-labelledby="CommentsHeader" data-bs-parent="#detailsAccordion">
+                                <div class="accordion-body">
+                                    <div class="card card-body" style="width: 100%">
+                                        <textarea class="form-control" id="newComment"></textarea>
+                                        <button class="btn btn-primary" id="create" value="Create comment" style="width: 20%">Create comment</button>
+                                    </div>
+                                    <div class="card card-body" style="width: 100%" id="comment-cards">
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="LogsHeader">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLogs" aria-expanded="true" aria-controls="collapseLogs">
+                                    Logs
+                                </button>
+                            </h2>
+                            <div id="collapseLogs" class="accordion-collapse collapse show" aria-labelledby="LogsHeader" data-bs-parent="#detailsAccordion">
+                                <div class="accordion-body">
+                                    <div class="card card-body" style="width: 100%" id="log-cards">
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
