@@ -1,7 +1,7 @@
 const helperModule = require("../modules/Helper.js");
 const userDB = require('../modules/UserDB.js');
 
-async function getAccountDetails(username, tokens) {
+async function getAccountDetails(username, isSelf, tokens) {
     const response = await userDB.getAccountDetails(username, tokens);
     const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
 
@@ -17,22 +17,39 @@ async function getAccountDetails(username, tokens) {
 
         const roles = account.roles;
 
-        const accDetails = `
+        let accDetails = `
             <p class="lead text-center" style="color: #0d6efd"><strong>Account</strong></p>
             
             <p class="lead">Username: ${account.username}</p>
-            <p class="lead">email: ${account.email}</p>
+            <p class="lead">Email: ${account.email}</p>
             <p class="lead">Creation date: ${accountCreationString}</p>
-            <p class="lead">Role: ${roles[0].name}</p><br>
-            
+        `;
+
+        // roles
+        let rolesHTML = ``;
+        for(const role of roles) {
+            rolesHTML = rolesHTML.concat(role.name);
+        }
+        accDetails = accDetails.concat(`<p class="lead">Role: ${rolesHTML}</p><br>`);
+        //----------------------------------------------------------
+
+        let employeeDetails = `
             <p class="lead text-center" style="color: #0d6efd"><strong>Employee</strong></p>
             
             <p class="lead">First name: ${employee.firstName}</p>
             <p class="lead">Last name: ${employee.lastName}</p>
-            <p class="lead">Phone: ${employee.phone}</p>
-            <p class="lead">CNP: ${employee.cnp}</p>
             <p class="lead">Birthday: ${empCreationString}</p>
         `;
+
+        if(isSelf == true) {
+            const sensitiveData = `
+                <p class="lead">Phone: ${employee.phone}</p>
+                <p class="lead">CNP: ${employee.cnp}</p>
+            `;
+            employeeDetails = employeeDetails.concat(sensitiveData)
+        }
+
+        accDetails = accDetails.concat(employeeDetails);
 
         const accCard = `
             <div class="card">

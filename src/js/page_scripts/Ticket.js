@@ -60,3 +60,14 @@ document.getElementById('unassign').addEventListener('click', function() {
 document.getElementById('create').addEventListener('click', function() {
     window.createComment(idTicket, username, tokens);
 });
+
+document.getElementById('assignedSpan').addEventListener('click', function() {
+    const username = document.getElementById('assigned').value;
+    if(username != "Undefined")
+        window.location.replace(`AccountDetails.html?username=${username}`);
+});
+
+document.getElementById('publisherSpan').addEventListener('click', function() {
+    const username = document.getElementById('publisher').value;
+    window.location.replace(`AccountDetails.html?username=${username}`);
+});
