@@ -143,19 +143,46 @@ async function fillBoardsDetails(idDep, tokens) {
     }
 }
 
-function createLinks(idDep) {
-    const boardsLinks = document.getElementById('BoardsLinks');
-    const newBoardHtml = `
-        <li><a id="Board" class="nav-link" href="NewBoard.html?id=${idDep}">Create board</a></li>
-    `;
-    const newTicketHtml = `
-        <li><a id="Ticket" class="nav-link" href="NewTicket.html?id=${idDep}">Create ticket</a></li>
-    `;
+function setNavBarAdmin(roles) {
+    let isAdmin = false;
+    let isDevOps = false;
+    for(const role of roles) {
+        if(role == "ADMIN" || role == "MANAGER") {
+            isAdmin = true;
+        }
+        if(role == "DEVOPS") {
+            isDevOps = true;
+        }
+    }
 
-    boardsLinks.innerHTML = `
-        ${newBoardHtml}
-        ${newTicketHtml}
-    `;
+    let adminNavbar;
+    let opsNavbar;
+
+    if(isAdmin) {
+        adminNavbar = `
+            <li><a class="nav-link" href="NewDepartment.html">Add Department</a></li>
+            <li><a class="nav-link" href="NewEmployee.html">Add Employee</a></li>
+        `;
+    }
+
+    if(isDevOps || isAdmin) {
+        opsNavbar = `
+            <li><a class="nav-link" href="NewBoard.html">Create board</a></li>
+            <li><a class="nav-link" href="NewTicket.html">Create ticket</a></li>
+            <li><a class="nav-link" href="NewType.html">Create type</a></li>
+        `;
+    }
+
+    if(adminNavbar != null || opsNavbar != null) {
+        const navbar = `
+            <ul class="nav navbar-nav me-auto">
+                ${adminNavbar == null ? '' : adminNavbar}
+                ${opsNavbar == null ? '' : opsNavbar}
+            </ul>
+        `;
+        document.getElementById('adminNavBar').innerHTML = navbar;
+    }
 }
+
 global.window.fillBoardsDetails = fillBoardsDetails;
-global.window.createLinks = createLinks;
+global.window.setNavBarAdmin = setNavBarAdmin;

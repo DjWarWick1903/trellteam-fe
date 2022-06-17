@@ -48,6 +48,28 @@ async function editDepartment(department, tokens) {
     }
 }
 
+function setNavBarAdmin(roles) {
+    isAdmin = false;
+    for(const role of roles) {
+        if(role == "ADMIN" || role == "MANAGER") {
+            isAdmin = true;
+            break;
+        }
+    }
+
+    if(isAdmin) {
+        const adminNavbar = `
+            <ul class="nav navbar-nav me-auto">
+                <li><a class="nav-link" href="NewDepartment.html">Add Department</a></li>
+                <li><a class="nav-link" href="NewEmployee.html">Add Employee</a></li>
+            </ul>
+        `;
+
+        document.getElementById('adminNavBar').innerHTML = adminNavbar;
+    }
+}
+
 global.window.fillDepartmentData = fillDepartmentData;
 global.window.showAlert = showAlert;
 global.window.editDepartment = editDepartment;
+global.window.setNavBarAdmin = setNavBarAdmin;

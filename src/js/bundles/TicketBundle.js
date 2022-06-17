@@ -4558,6 +4558,47 @@ async function createComment(idTicket, username, tokens) {
     }
 }
 
+function setNavBarAdmin(roles) {
+    let isAdmin = false;
+    let isDevOps = false;
+    for(const role of roles) {
+        if(role == "ADMIN" || role == "MANAGER") {
+            isAdmin = true;
+        }
+        if(role == "DEVOPS") {
+            isDevOps = true;
+        }
+    }
+
+    let adminNavbar;
+    let opsNavbar;
+
+    if(isAdmin) {
+        adminNavbar = `
+            <li><a class="nav-link" href="NewDepartment.html">Add Department</a></li>
+            <li><a class="nav-link" href="NewEmployee.html">Add Employee</a></li>
+        `;
+    }
+
+    if(isDevOps || isAdmin) {
+        opsNavbar = `
+            <li><a class="nav-link" href="NewBoard.html">Create board</a></li>
+            <li><a class="nav-link" href="NewTicket.html">Create ticket</a></li>
+            <li><a class="nav-link" href="NewType.html">Create type</a></li>
+        `;
+    }
+
+    if(adminNavbar != null || opsNavbar != null) {
+        const navbar = `
+            <ul class="nav navbar-nav me-auto">
+                ${adminNavbar == null ? '' : adminNavbar}
+                ${opsNavbar == null ? '' : opsNavbar}
+            </ul>
+        `;
+        document.getElementById('adminNavBar').innerHTML = navbar;
+    }
+}
+
 global.window.fetchTicketDetails = fetchTicketDetails;
 global.window.updateTicketToDo = updateTicketToDo;
 global.window.updateTicketInProgress = updateTicketInProgress;
@@ -4567,6 +4608,7 @@ global.window.assignTicket = assignTicket;
 global.window.unassignTicket = unassignTicket;
 global.window.showAlert = showAlert;
 global.window.createComment = createComment;
+global.window.setNavBarAdmin = setNavBarAdmin;
 
 function setCommentsHTML(commentsList) {
     const commentsArea = document.getElementById('comment-cards');
@@ -4586,7 +4628,6 @@ function setCommentsHTML(commentsList) {
                 </div>
             </div>
         `;
-
 
         comments = comments.concat(commentBody);
     }
@@ -4937,10 +4978,12 @@ async function requestLogin(user, pass) {
         await axios
             .post(url, data)
             .then(function (resp) {
+                console.log(resp);
                 response = {
                     status: resp.status,
                     accessToken: resp.data.access_token,
-                    refreshToken: resp.data.refresh_token
+                    refreshToken: resp.data.refresh_token,
+                    roles: resp.data.roles
                 };
                 //axios.defaults.headers.common['Authorization'] = `Token: ${response.accessToken}`;
             })
@@ -4975,7 +5018,6 @@ async function requestTokenRefresh(refreshToken) {
         await axios
             .get(url, config)
             .then(function (resp) {
-                console.log(resp);
                 response = {
                     status: resp.status,
                     accessToken: resp.data.access_token,
@@ -4983,7 +5025,6 @@ async function requestTokenRefresh(refreshToken) {
                 }
             })
             .catch(function (err) {
-                console.log(err);
                 response = {
                     status: err.response.status,
                     message: err.message,
@@ -5015,11 +5056,9 @@ async function ping(tokens) {
         await axios
             .get(url, config)
             .then(function (resp) {
-                console.log(resp);
                 response = tokens;
             })
             .catch(function (err) {
-                console.log(err);
                 if(err.response.data.error_message.includes('The Token has expired')) {
                     response = null;
                 }
@@ -5061,14 +5100,12 @@ async function getRoles(tokens) {
             await axios
                 .get(url, config)
                 .then(function (resp) {
-                    console.log(resp);
                     response = {
                         status: resp.status,
                         roles: resp.data
                     }
                 })
                 .catch(function (err) {
-                    console.log(err);
                     response = {
                         status: err.response.status,
                         message: err.message,

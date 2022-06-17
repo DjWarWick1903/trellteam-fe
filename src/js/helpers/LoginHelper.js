@@ -7,7 +7,7 @@ async function executeLogin(username, password) {
     if(response.status == 200) {
         global.window.sessionStorage.setItem('accessToken', response.accessToken);
         global.window.sessionStorage.setItem('refreshToken', response.refreshToken);
-        global.window.sessionStorage.setItem('roles', response.roles);
+        global.window.sessionStorage.setItem('roles', new Array(response.roles));
         global.window.sessionStorage.setItem('username', username);
     } else {
         const alertPlaceholder = document.getElementById('errorAlertPlaceholder');

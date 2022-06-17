@@ -1,30 +1,34 @@
 const orgId = window.sessionStorage.getItem('orgId');
-if(orgId == null) window.location.replace("Login.html");
-console.log(orgId);
+const roles = window.sessionStorage.getItem('roles');
+if(orgId == null || roles == null) window.location.replace("Login.html");
 const tokens = {
     accessToken: window.sessionStorage.getItem('accessToken'),
     refreshToken: window.sessionStorage.getItem('refreshToken')
 }
-window.fillEmployeesSelect(orgId, tokens);
 
-document.getElementById('Clear').addEventListener('click', function(e) {
-    e.preventDefault();
-    const depField = document.getElementById('floatingInputGrid');
-    const selectField = document.getElementById('floatingSelectGrid');
+document.addEventListener("DOMContentLoaded", function(event) {
+    window.fillEmployeesSelect(orgId, tokens);
+    window.setNavBarAdmin(roles.split(','));
 
-    depField.value = '';
-    selectField.options[0].selected = 'selected';
-});
+    document.getElementById('Clear').addEventListener('click', function(e) {
+        e.preventDefault();
+        const depField = document.getElementById('floatingInputGrid');
+        const selectField = document.getElementById('floatingSelectGrid');
 
-document.getElementById('Create').addEventListener('click', async function (e) {
-    e.preventDefault();
+        depField.value = '';
+        selectField.options[0].selected = 'selected';
+    });
 
-    console.log(orgId);
-    const depField = document.getElementById('floatingInputGrid');
-    const selectField = document.getElementById('floatingSelectGrid');
+    document.getElementById('Create').addEventListener('click', async function (e) {
+        e.preventDefault();
 
-    const depName = depField.value;
-    const empId = selectField[selectField.selectedIndex].id;
+        console.log(orgId);
+        const depField = document.getElementById('floatingInputGrid');
+        const selectField = document.getElementById('floatingSelectGrid');
 
-    window.createDepartment(orgId, depName, empId, tokens);
+        const depName = depField.value;
+        const empId = selectField[selectField.selectedIndex].id;
+
+        window.createDepartment(orgId, depName, empId, tokens);
+    });
 });

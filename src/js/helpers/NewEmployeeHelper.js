@@ -129,6 +129,28 @@ function verifyEmployeeDetails(account, employee) {
     return true;
 }
 
+function setNavBarAdmin(roles) {
+    isAdmin = false;
+    for(const role of roles) {
+        if(role == "ADMIN" || role == "MANAGER") {
+            isAdmin = true;
+            break;
+        }
+    }
+
+    if(isAdmin) {
+        const adminNavbar = `
+            <ul class="nav navbar-nav me-auto">
+                <li><a class="nav-link" href="NewDepartment.html">Add Department</a></li>
+                <li><a class="nav-link active" href="NewEmployee.html">Add Employee</a></li>
+            </ul>
+        `;
+
+        document.getElementById('adminNavBar').innerHTML = adminNavbar;
+    }
+}
+
 global.window.fillRoles = fillRoles;
 global.window.fillOrganisationDetails = fillOrganisationDetails;
 global.window.createEmployee = createEmployee;
+global.window.setNavBarAdmin = setNavBarAdmin;

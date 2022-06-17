@@ -38,5 +38,27 @@ async function createDepartment(idOrg, departmentName, idMan, tokens) {
     }
 }
 
+function setNavBarAdmin(roles) {
+    isAdmin = false;
+    for(const role of roles) {
+        if(role == "ADMIN" || role == "MANAGER") {
+            isAdmin = true;
+            break;
+        }
+    }
+
+    if(isAdmin) {
+        const adminNavbar = `
+            <ul class="nav navbar-nav me-auto">
+                <li><a class="nav-link active" href="NewDepartment.html">Add Department</a></li>
+                <li><a class="nav-link" href="NewEmployee.html">Add Employee</a></li>
+            </ul>
+        `;
+
+        document.getElementById('adminNavBar').innerHTML = adminNavbar;
+    }
+}
+
 global.window.fillEmployeesSelect = fillEmployeesSelect;
 global.window.createDepartment = createDepartment;
+global.window.setNavBarAdmin = setNavBarAdmin;

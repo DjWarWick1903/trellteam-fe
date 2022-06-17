@@ -4426,8 +4426,30 @@ async function createDepartment(idOrg, departmentName, idMan, tokens) {
     }
 }
 
+function setNavBarAdmin(roles) {
+    isAdmin = false;
+    for(const role of roles) {
+        if(role == "ADMIN" || role == "MANAGER") {
+            isAdmin = true;
+            break;
+        }
+    }
+
+    if(isAdmin) {
+        const adminNavbar = `
+            <ul class="nav navbar-nav me-auto">
+                <li><a class="nav-link active" href="NewDepartment.html">Add Department</a></li>
+                <li><a class="nav-link" href="NewEmployee.html">Add Employee</a></li>
+            </ul>
+        `;
+
+        document.getElementById('adminNavBar').innerHTML = adminNavbar;
+    }
+}
+
 global.window.fillEmployeesSelect = fillEmployeesSelect;
 global.window.createDepartment = createDepartment;
+global.window.setNavBarAdmin = setNavBarAdmin;
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"../modules/DepartmentDB.js":38,"../modules/EmployeeDB.js":39,"../modules/Helper.js":40}],38:[function(require,module,exports){
 const helperModule = require("./Helper");
@@ -4911,10 +4933,12 @@ async function requestLogin(user, pass) {
         await axios
             .post(url, data)
             .then(function (resp) {
+                console.log(resp);
                 response = {
                     status: resp.status,
                     accessToken: resp.data.access_token,
-                    refreshToken: resp.data.refresh_token
+                    refreshToken: resp.data.refresh_token,
+                    roles: resp.data.roles
                 };
                 //axios.defaults.headers.common['Authorization'] = `Token: ${response.accessToken}`;
             })
@@ -4949,7 +4973,6 @@ async function requestTokenRefresh(refreshToken) {
         await axios
             .get(url, config)
             .then(function (resp) {
-                console.log(resp);
                 response = {
                     status: resp.status,
                     accessToken: resp.data.access_token,
@@ -4957,7 +4980,6 @@ async function requestTokenRefresh(refreshToken) {
                 }
             })
             .catch(function (err) {
-                console.log(err);
                 response = {
                     status: err.response.status,
                     message: err.message,
@@ -4989,11 +5011,9 @@ async function ping(tokens) {
         await axios
             .get(url, config)
             .then(function (resp) {
-                console.log(resp);
                 response = tokens;
             })
             .catch(function (err) {
-                console.log(err);
                 if(err.response.data.error_message.includes('The Token has expired')) {
                     response = null;
                 }
@@ -5035,14 +5055,12 @@ async function getRoles(tokens) {
             await axios
                 .get(url, config)
                 .then(function (resp) {
-                    console.log(resp);
                     response = {
                         status: resp.status,
                         roles: resp.data
                     }
                 })
                 .catch(function (err) {
-                    console.log(err);
                     response = {
                         status: err.response.status,
                         message: err.message,

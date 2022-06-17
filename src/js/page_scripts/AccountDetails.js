@@ -1,5 +1,6 @@
 let username = window.sessionStorage.getItem('username');
-if(username == null) window.location.replace("Login.html");
+const roles = window.sessionStorage.getItem('roles');
+if(username == null || roles == null) window.location.replace("Login.html");
 const tokens = {
     accessToken: window.sessionStorage.getItem('accessToken'),
     refreshToken: window.sessionStorage.getItem('refreshToken')
@@ -16,4 +17,5 @@ if(urlParams.has('username')) {
 
 document.addEventListener("DOMContentLoaded", function(event) {
     window.getAccountDetails(username, isSelf, tokens);
+    window.setNavBarAdmin(roles.split(','));
 });

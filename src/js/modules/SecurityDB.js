@@ -13,10 +13,12 @@ async function requestLogin(user, pass) {
         await axios
             .post(url, data)
             .then(function (resp) {
+                console.log(resp);
                 response = {
                     status: resp.status,
                     accessToken: resp.data.access_token,
-                    refreshToken: resp.data.refresh_token
+                    refreshToken: resp.data.refresh_token,
+                    roles: resp.data.roles
                 };
                 //axios.defaults.headers.common['Authorization'] = `Token: ${response.accessToken}`;
             })
@@ -51,7 +53,6 @@ async function requestTokenRefresh(refreshToken) {
         await axios
             .get(url, config)
             .then(function (resp) {
-                console.log(resp);
                 response = {
                     status: resp.status,
                     accessToken: resp.data.access_token,
@@ -59,7 +60,6 @@ async function requestTokenRefresh(refreshToken) {
                 }
             })
             .catch(function (err) {
-                console.log(err);
                 response = {
                     status: err.response.status,
                     message: err.message,
@@ -91,11 +91,9 @@ async function ping(tokens) {
         await axios
             .get(url, config)
             .then(function (resp) {
-                console.log(resp);
                 response = tokens;
             })
             .catch(function (err) {
-                console.log(err);
                 if(err.response.data.error_message.includes('The Token has expired')) {
                     response = null;
                 }
@@ -137,14 +135,12 @@ async function getRoles(tokens) {
             await axios
                 .get(url, config)
                 .then(function (resp) {
-                    console.log(resp);
                     response = {
                         status: resp.status,
                         roles: resp.data
                     }
                 })
                 .catch(function (err) {
-                    console.log(err);
                     response = {
                         status: err.response.status,
                         message: err.message,

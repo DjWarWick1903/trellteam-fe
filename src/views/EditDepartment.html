@@ -21,15 +21,21 @@
                         <span class="navbar-toggler-icon"></span>
                     </button>
                     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-                        <div class="navbar-nav">
-                            <a class="nav-link" aria-current="page" href="MainPage.html">Home</a>
-                            <a class="nav-link" href="Organisation.html">Organisation</a>
-                            <a class="nav-link active" href="NewDepartment.html">Add Department</a>
-                            <a class="nav-link" href="NewEmployee.html">Add Employee</a>
-                            <a class="nav-link" href="AccountDetails.html">Account details</a>
-                            <a class="nav-link me-auto" href="Login.html">Logout</a>
-                        </div>
+                        <ul class="nav navbar-nav me-auto">
+                            <li><a class="nav-link" aria-current="page" href="MainPage.html">Home</a></li>
+                            <li><a class="nav-link" href="Organisation.html">Organisation</a></li>
+                            <li><a class="nav-link" href="AccountDetails.html">Account details</a></li>
+                        </ul>
+                        <ul class="nav navbar-nav navbar-right" id="BoardsLinks">
+                            <li><a class="nav-link" href="Login.html">Logout</a></li>
+                        </ul>
                     </div>
+                </div>
+            </nav>
+            <!-- Admin Navbar -->
+            <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+                <div class="container-fluid" id="adminNavBar">
+
                 </div>
             </nav>
             <div class="announcer justify-content-center d-flex" id="errorAlertPlaceholder"></div><br>

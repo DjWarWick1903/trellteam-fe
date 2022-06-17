@@ -4518,11 +4518,33 @@ function showAlert(text, type, placeholder) {
     helperModule.showAlert(text, type, alertPlaceholder);
 }
 
+function setNavBarAdmin(roles) {
+    isAdmin = false;
+    for(const role of roles) {
+        if(role == "ADMIN" || role == "MANAGER") {
+            isAdmin = true;
+            break;
+        }
+    }
+
+    if(isAdmin) {
+        const adminNavbar = `
+            <ul class="nav navbar-nav me-auto">
+                <li><a class="nav-link" href="NewDepartment.html">Add Department</a></li>
+                <li><a class="nav-link" href="NewEmployee.html">Add Employee</a></li>
+            </ul>
+        `;
+
+        document.getElementById('adminNavBar').innerHTML = adminNavbar;
+    }
+}
+
 global.window.fillDepartmentEmployees = fillDepartmentEmployees;
 global.window.fillOrganisationEmployees = fillOrganisationEmployees;
 global.window.assignEmployee = assignEmployee;
 global.window.unassignEmployee = unassignEmployee;
 global.window.showAlert = showAlert;
+global.window.setNavBarAdmin = setNavBarAdmin;
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"../modules/EmployeeDB.js":38,"../modules/Helper.js":39,"../modules/OrganisationDB.js":40}],38:[function(require,module,exports){
 const helperModule = require("./Helper");
@@ -4890,8 +4912,103 @@ async function getOrganisationByUsername(username, tokens) {
     }
 }
 
+async function createType(type, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/organisation/type`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        }
+        let response;
+
+        try {
+            await axios
+                .post(url, type, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    const type = {
+                        id: resp.data.id,
+                        name: resp.data.name,
+                        idOrganisation: resp.data.idOrganisation
+                    };
+
+                    response = {
+                        status: resp.status,
+                        type
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch(err) {
+            response = {
+                status: 404,
+                message: err.message,
+                serverMessage: 'Server could not be reached'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function getTypes(idOrg, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/organisation/type/${idOrg}`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        }
+        let response;
+
+        try {
+            await axios
+                .get(url, config)
+                .then(function (resp) {
+                    console.log(resp);
+                    const types = resp.data;
+
+                    response = {
+                        status: resp.status,
+                        types
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch(err) {
+            response = {
+                status: 404,
+                message: err.message,
+                serverMessage: 'Server could not be reached'
+            }
+        }
+
+        return response;
+    }
+}
+
 module.exports.registerOrganisation = registerOrganisation;
 module.exports.getOrganisationByUsername = getOrganisationByUsername;
+module.exports.createType = createType;
+module.exports.getTypes = getTypes;
+
 },{"./Helper.js":39,"axios":1}],41:[function(require,module,exports){
 const axios = require("axios");
 const helperModule = require("./Helper");
@@ -4908,10 +5025,12 @@ async function requestLogin(user, pass) {
         await axios
             .post(url, data)
             .then(function (resp) {
+                console.log(resp);
                 response = {
                     status: resp.status,
                     accessToken: resp.data.access_token,
-                    refreshToken: resp.data.refresh_token
+                    refreshToken: resp.data.refresh_token,
+                    roles: resp.data.roles
                 };
                 //axios.defaults.headers.common['Authorization'] = `Token: ${response.accessToken}`;
             })
@@ -4946,7 +5065,6 @@ async function requestTokenRefresh(refreshToken) {
         await axios
             .get(url, config)
             .then(function (resp) {
-                console.log(resp);
                 response = {
                     status: resp.status,
                     accessToken: resp.data.access_token,
@@ -4954,7 +5072,6 @@ async function requestTokenRefresh(refreshToken) {
                 }
             })
             .catch(function (err) {
-                console.log(err);
                 response = {
                     status: err.response.status,
                     message: err.message,
@@ -4986,11 +5103,9 @@ async function ping(tokens) {
         await axios
             .get(url, config)
             .then(function (resp) {
-                console.log(resp);
                 response = tokens;
             })
             .catch(function (err) {
-                console.log(err);
                 if(err.response.data.error_message.includes('The Token has expired')) {
                     response = null;
                 }
@@ -5032,14 +5147,12 @@ async function getRoles(tokens) {
             await axios
                 .get(url, config)
                 .then(function (resp) {
-                    console.log(resp);
                     response = {
                         status: resp.status,
                         roles: resp.data
                     }
                 })
                 .catch(function (err) {
-                    console.log(err);
                     response = {
                         status: err.response.status,
                         message: err.message,

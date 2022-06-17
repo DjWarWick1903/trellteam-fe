@@ -5,17 +5,6 @@ const organisationDB = require('../modules/OrganisationDB.js');
 const ticketDB = require('../modules/TicketDB.js');
 const {getUrgencyTypes} = require("../modules/TicketDB");
 
-function createLinks(idDep) {
-    const boardsLinks = document.getElementById('BoardsLinks');
-    const newBoardHtml = `<li><a id="Board" class="nav-link" href="NewBoard.html?id=${idDep}">Create board</a></li>`;
-    const newTicketHtml = `<li><a id="Ticket" class="nav-link active" href="NewTicket.html?id=${idDep}">Create ticket</a></li>`;
-
-    boardsLinks.innerHTML = `
-        ${newBoardHtml}
-        ${newTicketHtml}
-    `;
-}
-
 async function fillDepartments(idOrg, tokens) {
     const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
     const response = await departmentDB.getOrganisationDepartments(idOrg, tokens);
@@ -104,9 +93,50 @@ async function createTicket(ticket, tokens) {
     }
 }
 
-global.window.createLinks = createLinks;
+function setNavBarAdmin(roles) {
+    let isAdmin = false;
+    let isDevOps = false;
+    for(const role of roles) {
+        if(role == "ADMIN" || role == "MANAGER") {
+            isAdmin = true;
+        }
+        if(role == "DEVOPS") {
+            isDevOps = true;
+        }
+    }
+
+    let adminNavbar;
+    let opsNavbar;
+
+    if(isAdmin) {
+        adminNavbar = `
+            <li><a class="nav-link" href="NewDepartment.html">Add Department</a></li>
+            <li><a class="nav-link" href="NewEmployee.html">Add Employee</a></li>
+        `;
+    }
+
+    if(isDevOps || isAdmin) {
+        opsNavbar = `
+            <li><a class="nav-link" href="NewBoard.html">Create board</a></li>
+            <li><a class="nav-link active" href="NewTicket.html">Create ticket</a></li>
+            <li><a class="nav-link" href="NewType.html">Create type</a></li>
+        `;
+    }
+
+    if(adminNavbar != null || opsNavbar != null) {
+        const navbar = `
+            <ul class="nav navbar-nav me-auto">
+                ${adminNavbar == null ? '' : adminNavbar}
+                ${opsNavbar == null ? '' : opsNavbar}
+            </ul>
+        `;
+        document.getElementById('adminNavBar').innerHTML = navbar;
+    }
+}
+
 global.window.fillDepartments = fillDepartments;
 global.window.fillBoards = fillBoards;
 global.window.fillTypes = fillTypes;
 global.window.fillUrgency = fillUrgency;
 global.window.createTicket = createTicket;
+global.window.setNavBarAdmin = setNavBarAdmin;

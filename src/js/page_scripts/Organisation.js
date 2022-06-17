@@ -1,7 +1,12 @@
 const username = window.sessionStorage.getItem('username');
-if(username == null) window.location.replace("Login.html");
+const roles = window.sessionStorage.getItem('roles');
+if(username == null || roles == null) window.location.replace("Login.html");
 const tokens = {
     accessToken: window.sessionStorage.getItem('accessToken'),
     refreshToken: window.sessionStorage.getItem('refreshToken')
 }
-window.getOrganisationDetails(username, tokens);
+
+document.addEventListener("DOMContentLoaded", function(event) {
+    window.getOrganisationDetails(username, tokens);
+    window.setNavBarAdmin(roles.split(','));
+});

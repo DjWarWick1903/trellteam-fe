@@ -4393,17 +4393,6 @@ const organisationDB = require('../modules/OrganisationDB.js');
 const ticketDB = require('../modules/TicketDB.js');
 const {getUrgencyTypes} = require("../modules/TicketDB");
 
-function createLinks(idDep) {
-    const boardsLinks = document.getElementById('BoardsLinks');
-    const newBoardHtml = `<li><a id="Board" class="nav-link" href="NewBoard.html?id=${idDep}">Create board</a></li>`;
-    const newTicketHtml = `<li><a id="Ticket" class="nav-link active" href="NewTicket.html?id=${idDep}">Create ticket</a></li>`;
-
-    boardsLinks.innerHTML = `
-        ${newBoardHtml}
-        ${newTicketHtml}
-    `;
-}
-
 async function fillDepartments(idOrg, tokens) {
     const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
     const response = await departmentDB.getOrganisationDepartments(idOrg, tokens);
@@ -4492,12 +4481,53 @@ async function createTicket(ticket, tokens) {
     }
 }
 
-global.window.createLinks = createLinks;
+function setNavBarAdmin(roles) {
+    let isAdmin = false;
+    let isDevOps = false;
+    for(const role of roles) {
+        if(role == "ADMIN" || role == "MANAGER") {
+            isAdmin = true;
+        }
+        if(role == "DEVOPS") {
+            isDevOps = true;
+        }
+    }
+
+    let adminNavbar;
+    let opsNavbar;
+
+    if(isAdmin) {
+        adminNavbar = `
+            <li><a class="nav-link" href="NewDepartment.html">Add Department</a></li>
+            <li><a class="nav-link" href="NewEmployee.html">Add Employee</a></li>
+        `;
+    }
+
+    if(isDevOps || isAdmin) {
+        opsNavbar = `
+            <li><a class="nav-link" href="NewBoard.html">Create board</a></li>
+            <li><a class="nav-link active" href="NewTicket.html">Create ticket</a></li>
+            <li><a class="nav-link" href="NewType.html">Create type</a></li>
+        `;
+    }
+
+    if(adminNavbar != null || opsNavbar != null) {
+        const navbar = `
+            <ul class="nav navbar-nav me-auto">
+                ${adminNavbar == null ? '' : adminNavbar}
+                ${opsNavbar == null ? '' : opsNavbar}
+            </ul>
+        `;
+        document.getElementById('adminNavBar').innerHTML = navbar;
+    }
+}
+
 global.window.fillDepartments = fillDepartments;
 global.window.fillBoards = fillBoards;
 global.window.fillTypes = fillTypes;
 global.window.fillUrgency = fillUrgency;
 global.window.createTicket = createTicket;
+global.window.setNavBarAdmin = setNavBarAdmin;
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"../modules/BoardDB.js":38,"../modules/DepartmentDB.js":39,"../modules/Helper.js":40,"../modules/OrganisationDB.js":41,"../modules/TicketDB":43,"../modules/TicketDB.js":43}],38:[function(require,module,exports){
 const helperModule = require("./Helper");
@@ -5069,10 +5099,12 @@ async function requestLogin(user, pass) {
         await axios
             .post(url, data)
             .then(function (resp) {
+                console.log(resp);
                 response = {
                     status: resp.status,
                     accessToken: resp.data.access_token,
-                    refreshToken: resp.data.refresh_token
+                    refreshToken: resp.data.refresh_token,
+                    roles: resp.data.roles
                 };
                 //axios.defaults.headers.common['Authorization'] = `Token: ${response.accessToken}`;
             })
@@ -5107,7 +5139,6 @@ async function requestTokenRefresh(refreshToken) {
         await axios
             .get(url, config)
             .then(function (resp) {
-                console.log(resp);
                 response = {
                     status: resp.status,
                     accessToken: resp.data.access_token,
@@ -5115,7 +5146,6 @@ async function requestTokenRefresh(refreshToken) {
                 }
             })
             .catch(function (err) {
-                console.log(err);
                 response = {
                     status: err.response.status,
                     message: err.message,
@@ -5147,11 +5177,9 @@ async function ping(tokens) {
         await axios
             .get(url, config)
             .then(function (resp) {
-                console.log(resp);
                 response = tokens;
             })
             .catch(function (err) {
-                console.log(err);
                 if(err.response.data.error_message.includes('The Token has expired')) {
                     response = null;
                 }
@@ -5193,14 +5221,12 @@ async function getRoles(tokens) {
             await axios
                 .get(url, config)
                 .then(function (resp) {
-                    console.log(resp);
                     response = {
                         status: resp.status,
                         roles: resp.data
                     }
                 })
                 .catch(function (err) {
-                    console.log(err);
                     response = {
                         status: err.response.status,
                         message: err.message,
@@ -5243,14 +5269,25 @@ async function createTicket(ticket, tokens) {
             await axios
                 .post(url, ticket, config)
                 .then(function (resp) {
-                    console.log(resp);
+                    const ticket = {
+                        id: resp.data.id,
+                        title: resp.data.title,
+                        difficulty: resp.data.difficulty,
+                        description: resp.data.description,
+                        notes: resp.data.notes,
+                        status: resp.data.status,
+                        publisher: resp.data.publisher,
+                        assigned: resp.data.assigned,
+                        type: resp.data.type,
+                        comments: resp.data.comments,
+                        logs: resp.data.logs
+                    }
                     response = {
                         status: resp.status,
-                        ticket: resp.data
+                        ticket
                     }
                 })
                 .catch(function (err) {
-                    console.log(err);
                     response = {
                         status: err.response.status,
                         message: err.message,
@@ -5285,7 +5322,6 @@ async function getTicket(idTicket, tokens) {
             await axios
                 .get(url, config)
                 .then(function (resp) {
-                    console.log(resp);
                     const ticket = {
                         id: resp.data.id,
                         title: resp.data.title,
@@ -5295,7 +5331,9 @@ async function getTicket(idTicket, tokens) {
                         status: resp.data.status,
                         publisher: resp.data.publisher,
                         assigned: resp.data.assigned,
-                        type: resp.data.type
+                        type: resp.data.type,
+                        comments: resp.data.comments,
+                        logs: resp.data.logs
                     }
                     response = {
                         status: resp.status,
@@ -5303,7 +5341,6 @@ async function getTicket(idTicket, tokens) {
                     }
                 })
                 .catch(function (err) {
-                    console.log(err);
                     response = {
                         status: err.response.status,
                         message: err.message,
@@ -5332,7 +5369,406 @@ function getUrgencyTypes() {
     return types;
 }
 
+async function updateTicketInToDo(idTicket, username, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/card/main/todo`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        }
+        const data = {
+            id: idTicket,
+            username
+        };
+        let response;
+
+        try {
+            await axios
+                .put(url, data, config)
+                .then(function (resp) {
+                    const ticket = {
+                        id: resp.data.id,
+                        title: resp.data.title,
+                        difficulty: resp.data.difficulty,
+                        description: resp.data.description,
+                        notes: resp.data.notes,
+                        status: resp.data.status,
+                        publisher: resp.data.publisher,
+                        assigned: resp.data.assigned,
+                        type: resp.data.type,
+                        comments: resp.data.comments,
+                        logs: resp.data.logs
+                    }
+                    response = {
+                        status: resp.status,
+                        ticket
+                    }
+                })
+                .catch(function (err) {
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch(err) {
+            response = {
+                status: 404,
+                message: err.message,
+                serverMessage: 'Server could not be reached'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function updateTicketInProgress(idTicket, username, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/card/main/progress`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        };
+        const data = {
+            id: idTicket,
+            username
+        }
+        let response;
+
+        try {
+            await axios
+                .put(url, data, config)
+                .then(function (resp) {
+                    const ticket = {
+                        id: resp.data.id,
+                        title: resp.data.title,
+                        difficulty: resp.data.difficulty,
+                        description: resp.data.description,
+                        notes: resp.data.notes,
+                        status: resp.data.status,
+                        publisher: resp.data.publisher,
+                        assigned: resp.data.assigned,
+                        type: resp.data.type,
+                        comments: resp.data.comments,
+                        logs: resp.data.logs
+                    }
+                    response = {
+                        status: resp.status,
+                        ticket
+                    }
+                })
+                .catch(function (err) {
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch(err) {
+            response = {
+                status: 404,
+                message: err.message,
+                serverMessage: 'Server could not be reached'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function updateTicketInDone(idTicket, username, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/card/main/done`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        };
+        const data = {
+            id: idTicket,
+            username
+        };
+        let response;
+
+        try {
+            await axios
+                .put(url, data, config)
+                .then(function (resp) {
+                    const ticket = {
+                        id: resp.data.id,
+                        title: resp.data.title,
+                        difficulty: resp.data.difficulty,
+                        description: resp.data.description,
+                        notes: resp.data.notes,
+                        status: resp.data.status,
+                        publisher: resp.data.publisher,
+                        assigned: resp.data.assigned,
+                        type: resp.data.type,
+                        comments: resp.data.comments,
+                        logs: resp.data.logs
+                    }
+                    response = {
+                        status: resp.status,
+                        ticket
+                    }
+                })
+                .catch(function (err) {
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch(err) {
+            response = {
+                status: 404,
+                message: err.message,
+                serverMessage: 'Server could not be reached'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function updateTicket(ticket, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/card/main`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        }
+        let response;
+
+        try {
+            await axios
+                .put(url, ticket, config)
+                .then(function (resp) {
+                    const ticket = {
+                        id: resp.data.id,
+                        title: resp.data.title,
+                        difficulty: resp.data.difficulty,
+                        description: resp.data.description,
+                        notes: resp.data.notes,
+                        status: resp.data.status,
+                        publisher: resp.data.publisher,
+                        assigned: resp.data.assigned,
+                        type: resp.data.type,
+                        comments: resp.data.comments,
+                        logs: resp.data.logs
+                    }
+                    response = {
+                        status: resp.status,
+                        ticket
+                    }
+                })
+                .catch(function (err) {
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch(err) {
+            response = {
+                status: 404,
+                message: err.message,
+                serverMessage: 'Server could not be reached'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function assignTicket(idTicket, username, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/card/assign`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        }
+        let response;
+        const data = {
+            id: idTicket,
+            user: username
+        };
+
+        try {
+            await axios
+                .put(url, data, config)
+                .then(function (resp) {
+                    const ticket = {
+                        id: resp.data.id,
+                        title: resp.data.title,
+                        difficulty: resp.data.difficulty,
+                        description: resp.data.description,
+                        notes: resp.data.notes,
+                        status: resp.data.status,
+                        publisher: resp.data.publisher,
+                        assigned: resp.data.assigned,
+                        type: resp.data.type,
+                        comments: resp.data.comments,
+                        logs: resp.data.logs
+                    }
+                    response = {
+                        status: resp.status,
+                        ticket
+                    }
+                })
+                .catch(function (err) {
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch(err) {
+            response = {
+                status: 404,
+                message: err.message,
+                serverMessage: 'Server could not be reached'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function unassignTicket(idTicket, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/card/unassign/${idTicket}`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        }
+        let response;
+
+        try {
+            await axios
+                .put(url, null, config)
+                .then(function (resp) {
+                    const ticket = {
+                        id: resp.data.id,
+                        title: resp.data.title,
+                        difficulty: resp.data.difficulty,
+                        description: resp.data.description,
+                        notes: resp.data.notes,
+                        status: resp.data.status,
+                        publisher: resp.data.publisher,
+                        assigned: resp.data.assigned,
+                        type: resp.data.type,
+                        comments: resp.data.comments,
+                        logs: resp.data.logs
+                    }
+                    response = {
+                        status: resp.status,
+                        ticket
+                    }
+                })
+                .catch(function (err) {
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch(err) {
+            response = {
+                status: 404,
+                message: err.message,
+                serverMessage: 'Server could not be reached'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function createCardComment(idTicket, username, comment, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/card/comment`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        }
+        const data = {
+            comment,
+            username,
+            idCard: idTicket
+        }
+        let response;
+
+        try {
+            await axios
+                .post(url, data, config)
+                .then(function (resp) {
+                    const ticket = {
+                        id: resp.data.id,
+                        title: resp.data.title,
+                        difficulty: resp.data.difficulty,
+                        description: resp.data.description,
+                        notes: resp.data.notes,
+                        status: resp.data.status,
+                        publisher: resp.data.publisher,
+                        assigned: resp.data.assigned,
+                        type: resp.data.type,
+                        comments: resp.data.comments,
+                        logs: resp.data.logs
+                    }
+                    response = {
+                        status: resp.status,
+                        ticket
+                    }
+                })
+                .catch(function (err) {
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch(err) {
+            response = {
+                status: 404,
+                message: err.message,
+                serverMessage: 'Server could not be reached'
+            }
+        }
+
+        return response;
+    }
+}
+
 module.exports.createTicket = createTicket;
 module.exports.getTicket = getTicket;
 module.exports.getUrgencyTypes = getUrgencyTypes;
+module.exports.updateTicketInToDo = updateTicketInToDo;
+module.exports.updateTicketInProgress = updateTicketInProgress;
+module.exports.updateTicketInDone = updateTicketInDone;
+module.exports.updateTicket = updateTicket;
+module.exports.assignTicket = assignTicket;
+module.exports.unassignTicket = unassignTicket;
+module.exports.createCardComment = createCardComment;
 },{"./Helper.js":40,"axios":1}]},{},[37]);
