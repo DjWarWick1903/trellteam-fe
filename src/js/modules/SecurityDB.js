@@ -159,7 +159,138 @@ async function getRoles(tokens) {
     }
 }
 
+async function addRole(username, roleID, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/security/account/role/add`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        };
+        const data = {
+            username,
+            roleID
+        };
+        let response;
+
+        try {
+            await axios
+                .put(url, data, config)
+                .then(function (resp) {
+                    response = {
+                        status: resp.status,
+                        account: resp.data
+                    }
+                })
+                .catch(function (err) {
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function removeRole(username, roleID, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/security/account/role/remove`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        };
+        const data = {
+            username,
+            roleID
+        };
+        let response;
+
+        try {
+            await axios
+                .put(url, data, config)
+                .then(function (resp) {
+                    response = {
+                        status: resp.status,
+                        account: resp.data
+                    }
+                })
+                .catch(function (err) {
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function getAccountRoles(username, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/security/account/role/${username}`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        };
+        let response;
+
+        try {
+            await axios
+                .get(url, config)
+                .then(function (resp) {
+                    response = {
+                        status: resp.status,
+                        roles: resp.data
+                    }
+                })
+                .catch(function (err) {
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
+
+        return response;
+    }
+}
+
 module.exports.requestLogin = requestLogin;
 module.exports.requestTokenRefresh = requestTokenRefresh;
 module.exports.ping = ping;
 module.exports.getRoles = getRoles;
+module.exports.addRole = addRole;
+module.exports.removeRole = removeRole;
+module.exports.getAccountRoles = getAccountRoles;

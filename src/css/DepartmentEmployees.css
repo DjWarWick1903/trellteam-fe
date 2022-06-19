@@ -24,7 +24,7 @@ hr {
     color: #0d6efd
 }
 
-.btn-primary, .btn-secondary {
+.btn-primary, .btn-secondary, .btn-danger {
     width: 130px;
 }
 

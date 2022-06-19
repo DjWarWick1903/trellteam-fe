@@ -45,6 +45,74 @@
                 <div id="account" class="col-12 justify-content-center d-flex">
 
                 </div>
+            </div><br>
+            <div class="row justify-content-center d-flex" id="addRoleRow">
+                <div class="card">
+                    <div class="card-header">Add role</div>
+                    <div class="card-body">
+                        <div class="form-floating">
+                            <select class="form-select" id="addRoleSelect" aria-label="Floating label select example">
+                                <!-- Roles -->
+                            </select>
+                            <label for="floatingSelectGrid">Role</label>
+                        </div>
+                        <div class="justify-content-center d-flex">
+                            <button id="buttonAddRole" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBackdrop">Assign role</button>
+                        </div>
+                    </div>
+                </div>
+            </div><br>
+            <div class="row justify-content-center d-flex" id="removeRoleRow">
+                <div class="card">
+                    <div class="card-header">Remove role</div>
+                    <div class="card-body">
+                        <div class="form-floating">
+                            <select class="form-select" id="removeRoleSelect" aria-label="Floating label select example">
+                                <!-- Roles -->
+                            </select>
+                            <label for="floatingSelectGrid">Role</label>
+                        </div>
+                        <div class="justify-content-center d-flex">
+                            <button id="buttonRemoveRole" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#removeBackdrop">Remove role</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="addBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="addBackdropLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="addBackdropLabel">Add role</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            Are you sure you want to add this role to the user?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                            <button id="assignRole" type="button" class="btn btn-primary" data-bs-dismiss="modal">Yes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="removeBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="removeBackdropLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="removeBackdropLabel">Remove role</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            Are you sure you want to remove this role from the user?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                            <button id="removeRole" type="button" class="btn btn-primary" data-bs-dismiss="modal">Yes</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 

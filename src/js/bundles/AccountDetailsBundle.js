@@ -4387,6 +4387,7 @@ process.umask = function() { return 0; };
 },{}],37:[function(require,module,exports){
 (function (global){(function (){
 const helperModule = require("../modules/Helper.js");
+const securityDB = require('../modules/SecurityDB.js');
 const userDB = require('../modules/UserDB.js');
 
 async function getAccountDetails(username, isSelf, tokens) {
@@ -4415,10 +4416,43 @@ async function getAccountDetails(username, isSelf, tokens) {
 
         // roles
         let rolesHTML = ``;
+        let isAdmin = false;
         for(const role of roles) {
-            rolesHTML = rolesHTML.concat(role.name);
+            if (role.name == "ADMIN" || role.name == "MANAGER") {
+                isAdmin = true;
+            }
         }
-        accDetails = accDetails.concat(`<p class="lead">Role: ${rolesHTML}</p><br>`);
+        if(!isAdmin) {
+            document.getElementById('buttonAddRole').disabled = true;
+            document.getElementById('buttonRemoveRole').disabled = true;
+        }
+        for(const role of roles) {
+            const roleHTML = `
+                <tr>
+                    <th scope="row">${role.name}</th>
+                </tr>
+            `;
+            rolesHTML = rolesHTML.concat(roleHTML);
+        }
+        let rolesTable = `
+            <div class="card" style="width: 100%;">
+                <div class="card-header">Roles</div>
+                <div class="card-body">
+                    <table class="table table-primary table-hover">
+                        <thead>
+                            <tr>
+                                <th scope="col" style="width: 200px">Role</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rolesBody">
+                            ${rolesHTML}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <br>
+        `;
+        accDetails = accDetails.concat(`${rolesTable}`);
         //----------------------------------------------------------
 
         let employeeDetails = `
@@ -4476,10 +4510,77 @@ function setNavBarAdmin(roles) {
     }
 }
 
+async function addRole(username, roleID, tokens) {
+    const response = await securityDB.addRole(username, roleID, tokens);
+    const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
+
+    if(response.status == 200) {
+        helperModule.showAlert('Role added successfully.', 'success', alertPlaceholder);
+    } else {
+        helperModule.showAlert('There was a problem adding the role.', 'danger', alertPlaceholder);
+    }
+}
+
+async function removeRole(username, roleID, tokens) {
+    const response = await securityDB.removeRole(username, roleID, tokens);
+    const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
+
+    if(response.status == 200) {
+        helperModule.showAlert('Role removed successfully.', 'success', alertPlaceholder);
+    } else {
+        helperModule.showAlert('There was a problem removing the role.', 'danger', alertPlaceholder);
+    }
+}
+
+async function setCurrentRolesSelect(username, tokens) {
+    const response = await securityDB.getAccountRoles(username, tokens);
+    const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
+
+    if(response.status == 200) {
+        const rolesSelect = document.getElementById('removeRoleSelect');
+        const roles = response.roles;
+
+        let rolesHTML = `<option value="Undefined" id="0" selected>Undefined</option>`;
+        for(const role of roles) {
+            const roleHTML = `<option value="${role.name}" id="${role.id}">${role.name}</option>`;
+            rolesHTML = rolesHTML.concat(roleHTML);
+        }
+
+        rolesSelect.innerHTML = rolesHTML;
+    } else {
+        helperModule.showAlert('There was a problem fetching current account roles.', 'danger', alertPlaceholder);
+    }
+}
+
+async function setRemainingRoles(username, tokens) {
+    const response1 = await securityDB.getAccountRoles(username, tokens);
+    const response2 = await securityDB.getRoles(tokens);
+    const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
+
+    if(response1.status == 200 && response2.status == 200) {
+        const rolesSelect = document.getElementById('addRoleSelect');
+        const roles = helperModule.rolesDifference(response1.roles, response2.roles);
+
+        let rolesHTML = `<option value="Undefined" id="0" selected>Undefined</option>`;
+        for(const role of roles) {
+            const roleHTML = `<option value="${role.name}" id="${role.id}">${role.name}</option>`;
+            rolesHTML = rolesHTML.concat(roleHTML);
+        }
+
+        rolesSelect.innerHTML = rolesHTML;
+    } else {
+        helperModule.showAlert('There was a problem fetching current account roles.', 'danger', alertPlaceholder);
+    }
+}
+
 global.window.getAccountDetails = getAccountDetails;
 global.window.setNavBarAdmin = setNavBarAdmin;
+global.window.addRole = addRole;
+global.window.removeRole = removeRole;
+global.window.setCurrentRolesSelect = setCurrentRolesSelect;
+global.window.setRemainingRoles = setRemainingRoles;
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../modules/Helper.js":38,"../modules/UserDB.js":40}],38:[function(require,module,exports){
+},{"../modules/Helper.js":38,"../modules/SecurityDB.js":39,"../modules/UserDB.js":40}],38:[function(require,module,exports){
 (function (global){(function (){
 const securityModule = require("./SecurityDB");
 
@@ -4538,7 +4639,7 @@ function employeesUnion(orgEmployees, depEmployees) {
     return [...employees, ...depEmployees];
 }
 
-function employeeDifference(orgEmployees, depEmployees) {
+function employeeDifference(orgEmployees, depEmployees, assigned) {
     let employees = [];
     for(const orgEmp of orgEmployees) {
         let isAssigned = false;
@@ -4549,12 +4650,46 @@ function employeeDifference(orgEmployees, depEmployees) {
             }
         }
 
-        if(isAssigned == false) {
+        if(assigned == true && isAssigned == true) {
+            employees = employees.concat(orgEmp);
+        }
+
+        if(assigned == false && isAssigned == false) {
             employees = employees.concat(orgEmp);
         }
     }
 
     return employees;
+}
+
+function rolesDifference(accountRoles, allRoles) {
+    let roles = [];
+    for(const role of allRoles) {
+        let isAssigned = false;
+        for(const aRole of accountRoles) {
+            if(aRole.id == role.id) {
+                isAssigned = true;
+                break;
+            }
+        }
+
+        if(isAssigned == false) {
+            roles = roles.concat(role);
+        }
+    }
+
+    return roles;
+}
+
+function getElementsByIdStartsWith(container, selectorTag, prefix) {
+    let items = [];
+    let myPosts = document.getElementById('rolesBody')
+    for(let i = 0; i < myPosts.length; i++) {
+        if(myPosts[i].id.lastIndexOf(prefix, 0) === 0) {
+            items.push(myPosts[i]);
+        }
+    }
+    return items;
 }
 
 module.exports.redirectToLogin = redirectToLogin;
@@ -4564,6 +4699,8 @@ module.exports.intersect = intersect;
 module.exports.difference = difference;
 module.exports.employeesUnion = employeesUnion;
 module.exports.employeeDifference = employeeDifference;
+module.exports.getElementsByIdStartsWith = getElementsByIdStartsWith;
+module.exports.rolesDifference = rolesDifference;
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./SecurityDB":39}],39:[function(require,module,exports){
 const axios = require("axios");
@@ -4727,10 +4864,141 @@ async function getRoles(tokens) {
     }
 }
 
+async function addRole(username, roleID, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/security/account/role/add`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        };
+        const data = {
+            username,
+            roleID
+        };
+        let response;
+
+        try {
+            await axios
+                .put(url, data, config)
+                .then(function (resp) {
+                    response = {
+                        status: resp.status,
+                        account: resp.data
+                    }
+                })
+                .catch(function (err) {
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function removeRole(username, roleID, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/security/account/role/remove`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        };
+        const data = {
+            username,
+            roleID
+        };
+        let response;
+
+        try {
+            await axios
+                .put(url, data, config)
+                .then(function (resp) {
+                    response = {
+                        status: resp.status,
+                        account: resp.data
+                    }
+                })
+                .catch(function (err) {
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function getAccountRoles(username, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/security/account/role/${username}`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        };
+        let response;
+
+        try {
+            await axios
+                .get(url, config)
+                .then(function (resp) {
+                    response = {
+                        status: resp.status,
+                        roles: resp.data
+                    }
+                })
+                .catch(function (err) {
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
+
+        return response;
+    }
+}
+
 module.exports.requestLogin = requestLogin;
 module.exports.requestTokenRefresh = requestTokenRefresh;
 module.exports.ping = ping;
 module.exports.getRoles = getRoles;
+module.exports.addRole = addRole;
+module.exports.removeRole = removeRole;
+module.exports.getAccountRoles = getAccountRoles;
 },{"./Helper":38,"axios":1}],40:[function(require,module,exports){
 const axios = require("axios");
 const helperModule = require('./Helper.js');

@@ -1,4 +1,5 @@
 const helperModule = require("../modules/Helper.js");
+const securityDB = require('../modules/SecurityDB.js');
 const userDB = require('../modules/UserDB.js');
 
 async function getAccountDetails(username, isSelf, tokens) {
@@ -27,10 +28,43 @@ async function getAccountDetails(username, isSelf, tokens) {
 
         // roles
         let rolesHTML = ``;
+        let isAdmin = false;
         for(const role of roles) {
-            rolesHTML = rolesHTML.concat(role.name);
+            if (role.name == "ADMIN" || role.name == "MANAGER") {
+                isAdmin = true;
+            }
         }
-        accDetails = accDetails.concat(`<p class="lead">Role: ${rolesHTML}</p><br>`);
+        if(!isAdmin) {
+            document.getElementById('buttonAddRole').disabled = true;
+            document.getElementById('buttonRemoveRole').disabled = true;
+        }
+        for(const role of roles) {
+            const roleHTML = `
+                <tr>
+                    <th scope="row">${role.name}</th>
+                </tr>
+            `;
+            rolesHTML = rolesHTML.concat(roleHTML);
+        }
+        let rolesTable = `
+            <div class="card" style="width: 100%;">
+                <div class="card-header">Roles</div>
+                <div class="card-body">
+                    <table class="table table-primary table-hover">
+                        <thead>
+                            <tr>
+                                <th scope="col" style="width: 200px">Role</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rolesBody">
+                            ${rolesHTML}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <br>
+        `;
+        accDetails = accDetails.concat(`${rolesTable}`);
         //----------------------------------------------------------
 
         let employeeDetails = `
@@ -88,5 +122,72 @@ function setNavBarAdmin(roles) {
     }
 }
 
+async function addRole(username, roleID, tokens) {
+    const response = await securityDB.addRole(username, roleID, tokens);
+    const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
+
+    if(response.status == 200) {
+        helperModule.showAlert('Role added successfully.', 'success', alertPlaceholder);
+    } else {
+        helperModule.showAlert('There was a problem adding the role.', 'danger', alertPlaceholder);
+    }
+}
+
+async function removeRole(username, roleID, tokens) {
+    const response = await securityDB.removeRole(username, roleID, tokens);
+    const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
+
+    if(response.status == 200) {
+        helperModule.showAlert('Role removed successfully.', 'success', alertPlaceholder);
+    } else {
+        helperModule.showAlert('There was a problem removing the role.', 'danger', alertPlaceholder);
+    }
+}
+
+async function setCurrentRolesSelect(username, tokens) {
+    const response = await securityDB.getAccountRoles(username, tokens);
+    const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
+
+    if(response.status == 200) {
+        const rolesSelect = document.getElementById('removeRoleSelect');
+        const roles = response.roles;
+
+        let rolesHTML = `<option value="Undefined" id="0" selected>Undefined</option>`;
+        for(const role of roles) {
+            const roleHTML = `<option value="${role.name}" id="${role.id}">${role.name}</option>`;
+            rolesHTML = rolesHTML.concat(roleHTML);
+        }
+
+        rolesSelect.innerHTML = rolesHTML;
+    } else {
+        helperModule.showAlert('There was a problem fetching current account roles.', 'danger', alertPlaceholder);
+    }
+}
+
+async function setRemainingRoles(username, tokens) {
+    const response1 = await securityDB.getAccountRoles(username, tokens);
+    const response2 = await securityDB.getRoles(tokens);
+    const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
+
+    if(response1.status == 200 && response2.status == 200) {
+        const rolesSelect = document.getElementById('addRoleSelect');
+        const roles = helperModule.rolesDifference(response1.roles, response2.roles);
+
+        let rolesHTML = `<option value="Undefined" id="0" selected>Undefined</option>`;
+        for(const role of roles) {
+            const roleHTML = `<option value="${role.name}" id="${role.id}">${role.name}</option>`;
+            rolesHTML = rolesHTML.concat(roleHTML);
+        }
+
+        rolesSelect.innerHTML = rolesHTML;
+    } else {
+        helperModule.showAlert('There was a problem fetching current account roles.', 'danger', alertPlaceholder);
+    }
+}
+
 global.window.getAccountDetails = getAccountDetails;
 global.window.setNavBarAdmin = setNavBarAdmin;
+global.window.addRole = addRole;
+global.window.removeRole = removeRole;
+global.window.setCurrentRolesSelect = setCurrentRolesSelect;
+global.window.setRemainingRoles = setRemainingRoles;

@@ -55,7 +55,7 @@ function employeesUnion(orgEmployees, depEmployees) {
     return [...employees, ...depEmployees];
 }
 
-function employeeDifference(orgEmployees, depEmployees) {
+function employeeDifference(orgEmployees, depEmployees, assigned) {
     let employees = [];
     for(const orgEmp of orgEmployees) {
         let isAssigned = false;
@@ -66,12 +66,46 @@ function employeeDifference(orgEmployees, depEmployees) {
             }
         }
 
-        if(isAssigned == false) {
+        if(assigned == true && isAssigned == true) {
+            employees = employees.concat(orgEmp);
+        }
+
+        if(assigned == false && isAssigned == false) {
             employees = employees.concat(orgEmp);
         }
     }
 
     return employees;
+}
+
+function rolesDifference(accountRoles, allRoles) {
+    let roles = [];
+    for(const role of allRoles) {
+        let isAssigned = false;
+        for(const aRole of accountRoles) {
+            if(aRole.id == role.id) {
+                isAssigned = true;
+                break;
+            }
+        }
+
+        if(isAssigned == false) {
+            roles = roles.concat(role);
+        }
+    }
+
+    return roles;
+}
+
+function getElementsByIdStartsWith(container, selectorTag, prefix) {
+    let items = [];
+    let myPosts = document.getElementById('rolesBody')
+    for(let i = 0; i < myPosts.length; i++) {
+        if(myPosts[i].id.lastIndexOf(prefix, 0) === 0) {
+            items.push(myPosts[i]);
+        }
+    }
+    return items;
 }
 
 module.exports.redirectToLogin = redirectToLogin;
@@ -81,3 +115,5 @@ module.exports.intersect = intersect;
 module.exports.difference = difference;
 module.exports.employeesUnion = employeesUnion;
 module.exports.employeeDifference = employeeDifference;
+module.exports.getElementsByIdStartsWith = getElementsByIdStartsWith;
+module.exports.rolesDifference = rolesDifference;

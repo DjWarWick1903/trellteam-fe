@@ -13,31 +13,35 @@ async function getMainPageDetails(username, tokens) {
     if(response != null && response.status == 200) {
         global.window.sessionStorage.setItem('orgId', response.organisation.id);
         let depsCard = '';
+        let depRow = '';
         const departments = response.departments;
-        let number = 0;
+        let depColumn = 0;
+        let totalColumns = 0;
+        console.log('lenght: ' + departments.length);
         for(const department of departments) {
+            console.log(department.name);
             const depCard = `
-                <div class="col-6">
+                <div class="col">
                     <div class="card">
                         <div class="card-header text-white">${department.name}</div>
                         <div class="card-body">
                             <form action="DepartmentEmployees.html" method="get" class="container-fluid justify-content-center">
                                 <input type="hidden" name="department" value="${department.name}">
-                                <div class="mx-auto col-4">
+                                <div class="mx-auto col-4 justify-content-center d-flex">
                                     <input class="btn btn-primary btn-lg" type="submit" value="Employees">
                                 </div>
                             </form><br>
                             <form action="Board.html" method="get" class="container-fluid justify-content-center">
                                 <input type="hidden" name="department" value="${department.name}">
                                 <input type="hidden" name="id" value="${department.id}">
-                                <div class="col-4 mx-auto">
+                                <div class="col-4 mx-auto justify-content-center d-flex">
                                     <input class="btn btn-primary btn-lg" type="submit" value="Boards">
                                 </div>
                             </form><br>
                             <form action="EditDepartment.html" method="get" class="container-fluid justify-content-center">
                                 <input type="hidden" name="department" value="${department.name}">
                                 <input type="hidden" name="id" value="${department.id}">
-                                <div class="col-4 mx-auto">
+                                <div class="col-4 mx-auto justify-content-center d-flex">
                                     <input class="btn btn-primary btn-lg" type="submit" value="Edit">
                                 </div>
                             </form>
@@ -46,21 +50,34 @@ async function getMainPageDetails(username, tokens) {
                 </div>
             `;
             depsCard = depsCard.concat(depCard);
-            number += 1;
-            if(number == 2) {
-                number = 0;
+            depColumn += 1;
+            totalColumns += 1;
+            console.log("depColumn: " + depColumn);
+            console.log("totalCol: " + totalColumns)
+            if(depColumn == 4 || totalColumns == departments.length) {
+                console.log("a intrat in if");
+                let depRowHTML = `
+                    <div class="row">
+                        ${depsCard}
+                    </div>
+                `;
+                depRow = depRow.concat(depRowHTML);
+                depsCard = '';
+                depColumn = 0;
             }
         }
 
         const orgCard = `
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header text-white">${response.organisation.name}</div>
-                <div class="card-body">
-                    ${depsCard}
+            <div class="justify-content-center d-flex">
+                <div class="card col-12 mx-auto">
+                    <div class="card-header text-white">${response.organisation.name}</div>
+                    <div class="card-body col-12 mx-auto">
+                        <div class="container">
+                            ${depRow}
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
         `;
 
         const replacement = document.getElementById('boards');

@@ -18,4 +18,32 @@ if(urlParams.has('username')) {
 document.addEventListener("DOMContentLoaded", function(event) {
     window.getAccountDetails(username, isSelf, tokens);
     window.setNavBarAdmin(roles.split(','));
+    window.setCurrentRolesSelect(username, tokens);
+    window.setRemainingRoles(username, tokens);
+
+    document.getElementById('assignRole').addEventListener('click', async function() {
+        const roleSelect = document.getElementById('addRoleSelect');
+        const roleID = roleSelect[roleSelect.selectedIndex].id;
+        if(roleID != 0) {
+            window.addRole(username, roleID, tokens);
+            setTimeout(() => {
+                window.getAccountDetails(username, isSelf, tokens);
+                window.setCurrentRolesSelect(username, tokens);
+                window.setRemainingRoles(username, tokens);
+            }, 2000);
+        }
+    });
+
+    document.getElementById('removeRole').addEventListener('click', async function() {
+        const roleSelect = document.getElementById('removeRoleSelect');
+        const roleID = roleSelect[roleSelect.selectedIndex].id;
+        if(roleID != 0) {
+            window.removeRole(username, roleID, tokens);
+            setTimeout(() => {
+                window.getAccountDetails(username, isSelf, tokens);
+                window.setCurrentRolesSelect(username, tokens);
+                window.setRemainingRoles(username, tokens);
+            }, 2000);
+        }
+    });
 });

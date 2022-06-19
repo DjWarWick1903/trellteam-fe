@@ -4453,7 +4453,7 @@ async function fillOrganisationEmployees(idOrg, username, depName, tokens) {
             }
         }
 
-        const employees = helperModule.employeeDifference(orgEmployees, depEmployees);
+        let employees = helperModule.employeeDifference(orgEmployees, depEmployees, false);
         let employeesHTML = `<option value="undefined" id="0" selected>Undefined</option>`;
         if(Array.isArray(employees)) {
             for (const employee of employees) {
@@ -4469,7 +4469,8 @@ async function fillOrganisationEmployees(idOrg, username, depName, tokens) {
         employeesSelect.innerHTML = employeesHTML;
 
         employeesHTML = `<option value="undefined" id="0" selected>Undefined</option>`;
-        for (const employee of orgEmployees) {
+        employees = helperModule.employeeDifference(orgEmployees, depEmployees, true);
+        for (const employee of employees) {
             const empHTML = `<option value="${employee.firstName} ${employee.lastName}" id="${employee.id}">${employee.firstName} ${employee.lastName}</option>`;
             employeesHTML = employeesHTML.concat(empHTML);
         }
@@ -4797,7 +4798,7 @@ function employeesUnion(orgEmployees, depEmployees) {
     return [...employees, ...depEmployees];
 }
 
-function employeeDifference(orgEmployees, depEmployees) {
+function employeeDifference(orgEmployees, depEmployees, assigned) {
     let employees = [];
     for(const orgEmp of orgEmployees) {
         let isAssigned = false;
@@ -4808,7 +4809,11 @@ function employeeDifference(orgEmployees, depEmployees) {
             }
         }
 
-        if(isAssigned == false) {
+        if(assigned == true && isAssigned == true) {
+            employees = employees.concat(orgEmp);
+        }
+
+        if(assigned == false && isAssigned == false) {
             employees = employees.concat(orgEmp);
         }
     }
