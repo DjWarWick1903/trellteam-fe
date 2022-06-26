@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
     if(urlParams.has('id') && urlParams.has('department')) {
         idDep = urlParams.get('id');
         departmentName = urlParams.get('department');
+        window.sessionStorage.setItem('idDep', idDep);
     }
 
     window.fillBoardsDetails(idDep, tokens);
