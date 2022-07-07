@@ -11,7 +11,7 @@ async function executeLogin(username, password) {
         global.window.sessionStorage.setItem('username', username);
     } else {
         const alertPlaceholder = document.getElementById('errorAlertPlaceholder');
-        helperModule.showAlert("There was an error logging in. Please try again.", 'danger', alertPlaceholder);
+        helperModule.showAlert("There was an error logging in. Perhaps the data you have entered is not correct.", 'danger', alertPlaceholder);
     }
 
     return response.status;

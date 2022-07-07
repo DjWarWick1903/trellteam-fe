@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
     window.fillBoards(0, tokens);
     window.fillTypes(idOrg, tokens);
     window.fillUrgency();
-    window.setNavBarAdmin(roles.split(','));
+    window.setNavBarAdmin(roles);
 
     document.getElementById('department').addEventListener('change', async function(e) {
         e.preventDefault();

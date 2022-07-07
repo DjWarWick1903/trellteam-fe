@@ -10,7 +10,7 @@ const tokens = {
 document.addEventListener("DOMContentLoaded", function(event) {
     // Page specific steps
     window.listTypes(idOrg, tokens);
-    window.setNavBarAdmin(roles.split(','));
+    window.setNavBarAdmin(roles);
 
     document.getElementById('Clear').addEventListener('click', function(e) {
         e.preventDefault();

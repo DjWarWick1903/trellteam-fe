@@ -130,13 +130,7 @@ function verifyEmployeeDetails(account, employee) {
 }
 
 function setNavBarAdmin(roles) {
-    isAdmin = false;
-    for(const role of roles) {
-        if(role == "ADMIN" || role == "MANAGER") {
-            isAdmin = true;
-            break;
-        }
-    }
+    var isAdmin = helperModule.checkIfAdmin(roles);
 
     if(isAdmin) {
         const adminNavbar = `

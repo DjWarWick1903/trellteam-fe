@@ -94,16 +94,8 @@ async function createTicket(ticket, tokens) {
 }
 
 function setNavBarAdmin(roles) {
-    let isAdmin = false;
-    let isDevOps = false;
-    for(const role of roles) {
-        if(role == "ADMIN" || role == "MANAGER") {
-            isAdmin = true;
-        }
-        if(role == "DEVOPS") {
-            isDevOps = true;
-        }
-    }
+    let isAdmin = helperModule.checkIfAdmin(roles);
+    let isDevOps = helperModule.checkIfDevOps(roles);
 
     let adminNavbar;
     let opsNavbar;

@@ -28,12 +28,7 @@ async function getAccountDetails(username, isSelf, tokens) {
 
         // roles
         let rolesHTML = ``;
-        let isAdmin = false;
-        for(const role of roles) {
-            if (role.name == "ADMIN" || role.name == "MANAGER") {
-                isAdmin = true;
-            }
-        }
+        var isAdmin = helperModule.checkIfAdmin(roles);
         if(!isAdmin) {
             document.getElementById('buttonAddRole').disabled = true;
             document.getElementById('buttonRemoveRole').disabled = true;
@@ -78,7 +73,6 @@ async function getAccountDetails(username, isSelf, tokens) {
         if(isSelf == true) {
             const sensitiveData = `
                 <p class="lead">Phone: ${employee.phone}</p>
-                <p class="lead">CNP: ${employee.cnp}</p>
             `;
             employeeDetails = employeeDetails.concat(sensitiveData)
         }
@@ -102,13 +96,7 @@ async function getAccountDetails(username, isSelf, tokens) {
 }
 
 function setNavBarAdmin(roles) {
-    isAdmin = false;
-    for(const role of roles) {
-        if(role == "ADMIN" || role == "MANAGER") {
-            isAdmin = true;
-            break;
-        }
-    }
+    isAdmin = helperModule.checkIfAdmin(roles);
 
     if(isAdmin) {
         const adminNavbar = `

@@ -17,7 +17,7 @@ if(urlParams.has('username')) {
 
 document.addEventListener("DOMContentLoaded", function(event) {
     window.getAccountDetails(username, isSelf, tokens);
-    window.setNavBarAdmin(roles.split(','));
+    window.setNavBarAdmin(roles);
     window.setCurrentRolesSelect(username, tokens);
     window.setRemainingRoles(username, tokens);
 

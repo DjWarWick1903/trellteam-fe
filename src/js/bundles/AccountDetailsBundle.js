@@ -4416,12 +4416,7 @@ async function getAccountDetails(username, isSelf, tokens) {
 
         // roles
         let rolesHTML = ``;
-        let isAdmin = false;
-        for(const role of roles) {
-            if (role.name == "ADMIN" || role.name == "MANAGER") {
-                isAdmin = true;
-            }
-        }
+        var isAdmin = helperModule.checkIfAdmin(roles);
         if(!isAdmin) {
             document.getElementById('buttonAddRole').disabled = true;
             document.getElementById('buttonRemoveRole').disabled = true;
@@ -4466,7 +4461,6 @@ async function getAccountDetails(username, isSelf, tokens) {
         if(isSelf == true) {
             const sensitiveData = `
                 <p class="lead">Phone: ${employee.phone}</p>
-                <p class="lead">CNP: ${employee.cnp}</p>
             `;
             employeeDetails = employeeDetails.concat(sensitiveData)
         }
@@ -4490,13 +4484,7 @@ async function getAccountDetails(username, isSelf, tokens) {
 }
 
 function setNavBarAdmin(roles) {
-    isAdmin = false;
-    for(const role of roles) {
-        if(role == "ADMIN" || role == "MANAGER") {
-            isAdmin = true;
-            break;
-        }
-    }
+    isAdmin = helperModule.checkIfAdmin(roles);
 
     if(isAdmin) {
         const adminNavbar = `
@@ -4692,6 +4680,26 @@ function getElementsByIdStartsWith(container, selectorTag, prefix) {
     return items;
 }
 
+function checkIfAdmin(roles) {
+    roles = roles.includes(',') ? roles.split(',') : roles;
+    var isArray = Array.isArray(roles);
+    let isAdmin = false;
+    if(isArray) {
+        for(const role of roles) {
+            if(role == "ADMIN" || role == "MANAGER") {
+                isAdmin = true;
+                break;
+            }
+        }
+    } else {
+        if(roles == "ADMIN" || roles == "MANAGER") {
+            isAdmin = true;
+        }
+    }
+
+    return isAdmin;
+}
+
 module.exports.redirectToLogin = redirectToLogin;
 module.exports.showAlert = showAlert;
 module.exports.verifyInputIsEmpty = verifyInputIsEmpty;
@@ -4701,6 +4709,7 @@ module.exports.employeesUnion = employeesUnion;
 module.exports.employeeDifference = employeeDifference;
 module.exports.getElementsByIdStartsWith = getElementsByIdStartsWith;
 module.exports.rolesDifference = rolesDifference;
+module.exports.checkIfAdmin = checkIfAdmin;
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./SecurityDB":39}],39:[function(require,module,exports){
 const axios = require("axios");

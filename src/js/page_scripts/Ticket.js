@@ -9,7 +9,7 @@ const tokens = {
 
 document.addEventListener("DOMContentLoaded", function(event) {
     let idTicket = null;
-    window.setNavBarAdmin(roles.split(','));
+    window.setNavBarAdmin(roles);
     const urlParams = new URLSearchParams(window.location.search);
     if(urlParams.has('id')) {
         idTicket = urlParams.get('id');

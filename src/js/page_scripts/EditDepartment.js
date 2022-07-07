@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
     let departmentName = null;
     let idDep = null;
 
-    window.setNavBarAdmin(roles.split(','));
+    window.setNavBarAdmin(roles);
     const urlParams = new URLSearchParams(window.location.search);
     if(urlParams.has('id')) {
         idDep = urlParams.get('id');
@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
         window.showAlert('There was an error fetching the department data.', 'danger', alertPlaceholder);
     }
 
-    document.getElementById('Clear').addEventListener('click', function(e) {
+    document.getElementById('Reset').addEventListener('click', function(e) {
         e.preventDefault();
         const depField = document.getElementById('floatingInputGrid');
         const selectField = document.getElementById('floatingSelectGrid');

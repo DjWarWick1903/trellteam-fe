@@ -8,7 +8,7 @@ const tokens = {
 
 document.addEventListener("DOMContentLoaded", function(event) {
     window.fillEmployeesSelect(orgId, tokens);
-    window.setNavBarAdmin(roles.split(','));
+    window.setNavBarAdmin(roles);
 
     document.getElementById('Clear').addEventListener('click', function(e) {
         e.preventDefault();
@@ -22,7 +22,6 @@ document.addEventListener("DOMContentLoaded", function(event) {
     document.getElementById('Create').addEventListener('click', async function (e) {
         e.preventDefault();
 
-        console.log(orgId);
         const depField = document.getElementById('floatingInputGrid');
         const selectField = document.getElementById('floatingSelectGrid');
 

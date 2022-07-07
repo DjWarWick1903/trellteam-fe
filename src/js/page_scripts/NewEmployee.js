@@ -2,6 +2,7 @@ const orgId = window.sessionStorage.getItem('orgId');
 const username = window.sessionStorage.getItem('username');
 const roles = window.sessionStorage.getItem('roles');
 if(orgId == null || username == null || roles == null) window.location.replace("Login.html");
+
 const tokens = {
     accessToken: window.sessionStorage.getItem('accessToken'),
     refreshToken: window.sessionStorage.getItem('refreshToken')
@@ -10,7 +11,7 @@ const tokens = {
 document.addEventListener("DOMContentLoaded", function(event) {
     window.fillRoles(tokens);
     window.fillOrganisationDetails(username, tokens);
-    window.setNavBarAdmin(roles.split(','));
+    window.setNavBarAdmin(roles);
 
     document.getElementById('Clear').addEventListener('click', function(e) {
         e.preventDefault();

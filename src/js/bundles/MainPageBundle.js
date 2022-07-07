@@ -4400,6 +4400,9 @@ async function getMainPageDetails(username, tokens) {
 
     if(response != null && response.status == 200) {
         global.window.sessionStorage.setItem('orgId', response.organisation.id);
+        var roles = global.window.sessionStorage.getItem('roles');
+        let isAdmin = helperModule.checkIfAdmin(roles);
+
         let depsCard = '';
         let depRow = '';
         const departments = response.departments;
@@ -4416,7 +4419,7 @@ async function getMainPageDetails(username, tokens) {
                             <form action="DepartmentEmployees.html" method="get" class="container-fluid justify-content-center">
                                 <input type="hidden" name="department" value="${department.name}">
                                 <div class="mx-auto col-4 justify-content-center d-flex">
-                                    <input class="btn btn-primary btn-lg" type="submit" value="Employees">
+                                    <input class="btn btn-primary btn-lg" type="submit" value="Employees" ${isAdmin == false ? 'disabled' : ''}>
                                 </div>
                             </form><br>
                             <form action="Board.html" method="get" class="container-fluid justify-content-center">
@@ -4430,7 +4433,7 @@ async function getMainPageDetails(username, tokens) {
                                 <input type="hidden" name="department" value="${department.name}">
                                 <input type="hidden" name="id" value="${department.id}">
                                 <div class="col-4 mx-auto justify-content-center d-flex">
-                                    <input class="btn btn-primary btn-lg" type="submit" value="Edit">
+                                    <input class="btn btn-primary btn-lg" type="submit" value="Edit" ${isAdmin == false ? 'disabled' : ''}>
                                 </div>
                             </form>
                         </div>
@@ -4443,7 +4446,6 @@ async function getMainPageDetails(username, tokens) {
             console.log("depColumn: " + depColumn);
             console.log("totalCol: " + totalColumns)
             if(depColumn == 4 || totalColumns == departments.length) {
-                console.log("a intrat in if");
                 let depRowHTML = `
                     <div class="row">
                         ${depsCard}
@@ -4476,13 +4478,7 @@ async function getMainPageDetails(username, tokens) {
 }
 
 function setNavBarAdmin(roles) {
-    isAdmin = false;
-    for(const role of roles) {
-        if(role == "ADMIN" || role == "MANAGER") {
-            isAdmin = true;
-            break;
-        }
-    }
+    var isAdmin = helperModule.checkIfAdmin(roles);
 
     if(isAdmin) {
         const adminNavbar = `
@@ -4581,6 +4577,56 @@ function employeeDifference(orgEmployees, depEmployees, assigned) {
     return employees;
 }
 
+function rolesDifference(accountRoles, allRoles) {
+    let roles = [];
+    for(const role of allRoles) {
+        let isAssigned = false;
+        for(const aRole of accountRoles) {
+            if(aRole.id == role.id) {
+                isAssigned = true;
+                break;
+            }
+        }
+
+        if(isAssigned == false) {
+            roles = roles.concat(role);
+        }
+    }
+
+    return roles;
+}
+
+function getElementsByIdStartsWith(container, selectorTag, prefix) {
+    let items = [];
+    let myPosts = document.getElementById('rolesBody')
+    for(let i = 0; i < myPosts.length; i++) {
+        if(myPosts[i].id.lastIndexOf(prefix, 0) === 0) {
+            items.push(myPosts[i]);
+        }
+    }
+    return items;
+}
+
+function checkIfAdmin(roles) {
+    roles = roles.includes(',') ? roles.split(',') : roles;
+    var isArray = Array.isArray(roles);
+    let isAdmin = false;
+    if(isArray) {
+        for(const role of roles) {
+            if(role == "ADMIN" || role == "MANAGER") {
+                isAdmin = true;
+                break;
+            }
+        }
+    } else {
+        if(roles == "ADMIN" || roles == "MANAGER") {
+            isAdmin = true;
+        }
+    }
+
+    return isAdmin;
+}
+
 module.exports.redirectToLogin = redirectToLogin;
 module.exports.showAlert = showAlert;
 module.exports.verifyInputIsEmpty = verifyInputIsEmpty;
@@ -4588,6 +4634,9 @@ module.exports.intersect = intersect;
 module.exports.difference = difference;
 module.exports.employeesUnion = employeesUnion;
 module.exports.employeeDifference = employeeDifference;
+module.exports.getElementsByIdStartsWith = getElementsByIdStartsWith;
+module.exports.rolesDifference = rolesDifference;
+module.exports.checkIfAdmin = checkIfAdmin;
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./SecurityDB":40}],39:[function(require,module,exports){
 const axios = require("axios");
@@ -4936,8 +4985,139 @@ async function getRoles(tokens) {
     }
 }
 
+async function addRole(username, roleID, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/security/account/role/add`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        };
+        const data = {
+            username,
+            roleID
+        };
+        let response;
+
+        try {
+            await axios
+                .put(url, data, config)
+                .then(function (resp) {
+                    response = {
+                        status: resp.status,
+                        account: resp.data
+                    }
+                })
+                .catch(function (err) {
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function removeRole(username, roleID, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/security/account/role/remove`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        };
+        const data = {
+            username,
+            roleID
+        };
+        let response;
+
+        try {
+            await axios
+                .put(url, data, config)
+                .then(function (resp) {
+                    response = {
+                        status: resp.status,
+                        account: resp.data
+                    }
+                })
+                .catch(function (err) {
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
+
+        return response;
+    }
+}
+
+async function getAccountRoles(username, tokens) {
+    tokens = await helperModule.redirectToLogin(tokens);
+
+    if(tokens != false) {
+        const url = `http://localhost:8080/security/account/role/${username}`;
+        const config = {
+            headers: {
+                'Authorization': `Token: ${tokens.accessToken}`
+            }
+        };
+        let response;
+
+        try {
+            await axios
+                .get(url, config)
+                .then(function (resp) {
+                    response = {
+                        status: resp.status,
+                        roles: resp.data
+                    }
+                })
+                .catch(function (err) {
+                    response = {
+                        status: err.response.status,
+                        message: err.message,
+                        serverMessage: err.response.data.error_message
+                    }
+                });
+        } catch (err) {
+            response = {
+                status: 900,
+                message: err.message,
+                serverMessage: 'Internal error.'
+            }
+        }
+
+        return response;
+    }
+}
+
 module.exports.requestLogin = requestLogin;
 module.exports.requestTokenRefresh = requestTokenRefresh;
 module.exports.ping = ping;
 module.exports.getRoles = getRoles;
+module.exports.addRole = addRole;
+module.exports.removeRole = removeRole;
+module.exports.getAccountRoles = getAccountRoles;
 },{"./Helper":38,"axios":1}]},{},[37]);

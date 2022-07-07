@@ -36,7 +36,6 @@ async function fillDepartmentEmployees(username, depName, tokens) {
                     <td>${employee.lastName}</td>
                     <td>${employee.phone}</td>
                     <td>${bdayString}</td>
-                    <td>${employee.cnp}</td>
                 </tr>
             `;
             bodyHTML = bodyHTML.concat(body);
@@ -132,13 +131,7 @@ function showAlert(text, type, placeholder) {
 }
 
 function setNavBarAdmin(roles) {
-    isAdmin = false;
-    for(const role of roles) {
-        if(role == "ADMIN" || role == "MANAGER") {
-            isAdmin = true;
-            break;
-        }
-    }
+    var isAdmin = helperModule.checkIfAdmin(roles);
 
     if(isAdmin) {
         const adminNavbar = `

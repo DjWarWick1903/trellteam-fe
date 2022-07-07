@@ -12,6 +12,9 @@ async function getMainPageDetails(username, tokens) {
 
     if(response != null && response.status == 200) {
         global.window.sessionStorage.setItem('orgId', response.organisation.id);
+        var roles = global.window.sessionStorage.getItem('roles');
+        let isAdmin = helperModule.checkIfAdmin(roles);
+
         let depsCard = '';
         let depRow = '';
         const departments = response.departments;
@@ -28,7 +31,7 @@ async function getMainPageDetails(username, tokens) {
                             <form action="DepartmentEmployees.html" method="get" class="container-fluid justify-content-center">
                                 <input type="hidden" name="department" value="${department.name}">
                                 <div class="mx-auto col-4 justify-content-center d-flex">
-                                    <input class="btn btn-primary btn-lg" type="submit" value="Employees">
+                                    <input class="btn btn-primary btn-lg" type="submit" value="Employees" ${isAdmin == false ? 'disabled' : ''}>
                                 </div>
                             </form><br>
                             <form action="Board.html" method="get" class="container-fluid justify-content-center">
@@ -42,7 +45,7 @@ async function getMainPageDetails(username, tokens) {
                                 <input type="hidden" name="department" value="${department.name}">
                                 <input type="hidden" name="id" value="${department.id}">
                                 <div class="col-4 mx-auto justify-content-center d-flex">
-                                    <input class="btn btn-primary btn-lg" type="submit" value="Edit">
+                                    <input class="btn btn-primary btn-lg" type="submit" value="Edit" ${isAdmin == false ? 'disabled' : ''}>
                                 </div>
                             </form>
                         </div>
@@ -55,7 +58,6 @@ async function getMainPageDetails(username, tokens) {
             console.log("depColumn: " + depColumn);
             console.log("totalCol: " + totalColumns)
             if(depColumn == 4 || totalColumns == departments.length) {
-                console.log("a intrat in if");
                 let depRowHTML = `
                     <div class="row">
                         ${depsCard}
@@ -88,13 +90,7 @@ async function getMainPageDetails(username, tokens) {
 }
 
 function setNavBarAdmin(roles) {
-    isAdmin = false;
-    for(const role of roles) {
-        if(role == "ADMIN" || role == "MANAGER") {
-            isAdmin = true;
-            break;
-        }
-    }
+    var isAdmin = helperModule.checkIfAdmin(roles);
 
     if(isAdmin) {
         const adminNavbar = `

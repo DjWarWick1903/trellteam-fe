@@ -1,4 +1,5 @@
 const organisationDB = require('../modules/OrganisationDB.js');
+const helperModule = require('../modules/Helper.js');
 
 async function getOrganisationDetails(username, tokens) {
     const response = await organisationDB.getOrganisationByUsername(username, tokens);
@@ -42,13 +43,7 @@ async function getOrganisationDetails(username, tokens) {
 }
 
 function setNavBarAdmin(roles) {
-    isAdmin = false;
-    for(const role of roles) {
-        if(role == "ADMIN" || role == "MANAGER") {
-            isAdmin = true;
-            break;
-        }
-    }
+    var isAdmin = helperModule.checkIfAdmin(roles);
 
     if(isAdmin) {
         const adminNavbar = `

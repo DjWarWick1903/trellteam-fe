@@ -7,9 +7,9 @@ const tokens = {
 }
 
 document.addEventListener("DOMContentLoaded", function(event) {
-    let idDep = window.sessionStorage.getItem('idDep');
+    var idDep = window.sessionStorage.getItem('idDep');
 
-    window.setNavBarAdmin(roles.split(','));
+    window.setNavBarAdmin(roles);
 
     document.getElementById('Clear').addEventListener('click', function(e) {
         e.preventDefault();

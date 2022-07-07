@@ -8,5 +8,5 @@ const tokens = {
 
 document.addEventListener("DOMContentLoaded", function(event) {
     window.getOrganisationDetails(username, tokens);
-    window.setNavBarAdmin(roles.split(','));
+    window.setNavBarAdmin(roles);
 });

@@ -108,6 +108,46 @@ function getElementsByIdStartsWith(container, selectorTag, prefix) {
     return items;
 }
 
+function checkIfAdmin(roles) {
+    roles = roles.includes(',') ? roles.split(',') : roles;
+    var isArray = Array.isArray(roles);
+    let isAdmin = false;
+    if(isArray) {
+        for(const role of roles) {
+            if(role == "ADMIN" || role == "MANAGER") {
+                isAdmin = true;
+                break;
+            }
+        }
+    } else {
+        if(roles == "ADMIN" || roles == "MANAGER") {
+            isAdmin = true;
+        }
+    }
+
+    return isAdmin;
+}
+
+function checkIfDevOps(roles) {
+    roles = roles.includes(',') ? roles.split(',') : roles;
+    var isArray = Array.isArray(roles);
+    let isDevOps = false;
+    if(isArray) {
+        for(const role of roles) {
+            if(role == "DEVOPS") {
+                isDevOps = true;
+                break;
+            }
+        }
+    } else {
+        if(roles == "DEVOPS") {
+            isDevOps = true;
+        }
+    }
+
+    return isDevOps;
+}
+
 module.exports.redirectToLogin = redirectToLogin;
 module.exports.showAlert = showAlert;
 module.exports.verifyInputIsEmpty = verifyInputIsEmpty;
@@ -117,3 +157,5 @@ module.exports.employeesUnion = employeesUnion;
 module.exports.employeeDifference = employeeDifference;
 module.exports.getElementsByIdStartsWith = getElementsByIdStartsWith;
 module.exports.rolesDifference = rolesDifference;
+module.exports.checkIfAdmin = checkIfAdmin;
+module.exports.checkIfDevOps = checkIfDevOps;

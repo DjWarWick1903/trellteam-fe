@@ -17,5 +17,5 @@ document.addEventListener("DOMContentLoaded", function(event) {
     }
 
     window.fillBoardsDetails(idDep, tokens);
-    window.setNavBarAdmin(roles.split(','));
+    window.setNavBarAdmin(roles);
 });
